@@ -5,41 +5,36 @@ export class Start extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('background', 'assets/space.png');
-        this.load.image('logo', 'assets/phaser.png');
-
-        //  The ship sprite is CC0 from https://ansimuz.itch.io - check out his other work!
-        this.load.spritesheet('ship', 'assets/spaceship.png', { frameWidth: 176, frameHeight: 96 });
+        // Carregar o fundo do céu e as nuvens
+        this.load.image('sky', 'assets/FundoJogo/CeuAzul.png');
+        this.load.image('clouds', 'assets/FundoJogo/Nuvens.png');
+        // Carregar o sprite do chão
+        this.load.image('ground', 'assets/ChaoJogo/Chao1.png');
     }
 
     create() {
-        this.background = this.add.tileSprite(640, 360, 1280, 720, 'background');
+        // Fundo de céu azul (parado)
+        this.sky = this.add.tileSprite(640, 360, 1280, 720, 'sky').setScrollFactor(0);
+        // Nuvens (parallax)
+        this.clouds = this.add.tileSprite(640, 200, 1280, 300, 'clouds').setScrollFactor(0);
 
-        const logo = this.add.image(640, 200, 'logo');
+        // Adicionar uma linha de blocos de chão perfeitamente conectados
+        const groundY = 650; // Ajuste conforme necessário
+        // Obter a largura real do sprite do chão
+        const groundTexture = this.textures.get('ground');
+        const blockWidth = groundTexture.getSourceImage().width;
+        const numBlocks = Math.ceil(1280 / blockWidth); // Preencher toda a largura do jogo
 
-        const ship = this.add.sprite(640, 360, 'ship');
-
-        ship.anims.create({
-            key: 'fly',
-            frames: this.anims.generateFrameNumbers('ship', { start: 0, end: 2 }),
-            frameRate: 15,
-            repeat: -1
-        });
-
-        ship.play('fly');
-
-        this.tweens.add({
-            targets: logo,
-            y: 400,
-            duration: 1500,
-            ease: 'Sine.inOut',
-            yoyo: true,
-            loop: -1
-        });
+        for (let i = 0; i < numBlocks; i++) {
+            this.add.image(i * blockWidth, groundY, 'ground').setOrigin(0, 0);
+        }
     }
 
     update() {
-        this.background.tilePositionX += 2;
+        // Parallax das nuvens
+        if (this.clouds) {
+            this.clouds.tilePositionX += 0.3;
+        }
     }
     
 }
