@@ -10,6 +10,17 @@ const config = {
     height: 720,
     backgroundColor: '#000000',
     pixelArt: false,
+
+     
+    // ✅ ATIVAR A FÍSICA
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 600 },
+            debug: false
+        }
+    },
+    
     scene: [
         Menu,
         Start
