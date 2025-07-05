@@ -1,37 +1,81 @@
+import { translations } from '../Tradu.js';
+
 export class Menu extends Phaser.Scene {
     constructor() {
         super('Menu');
     }
 
     preload() {
-        // Pode carregar aqui imagens do menu se quiser
+        this.load.image('fundoMenu', 'assets/FundoJogo/FundoMenu.png');
     }
 
     create() {
-        this.cameras.main.setBackgroundColor('#222');
-        const title = this.add.text(640, 200, 'Overlord Rising', {
+        const lang = localStorage.getItem('lang') || 'pt';
+        const t = translations[lang];
+
+        // Adiciona imagem de fundo
+        this.add.image(640, 360, 'fundoMenu').setOrigin(0.5).setDisplaySize(1280, 720);
+
+        // Título com sombra
+        this.add.text(640, 100, t.title, {
             fontSize: '64px',
-            color: '#fff',
+            color: '#ffffff',
             fontFamily: 'Arial',
+            stroke: '#000',
+            strokeThickness: 6,
+            shadow: {
+                offsetX: 3,
+                offsetY: 3,
+                color: '#000',
+                blur: 4,
+                fill: true
+            }
         }).setOrigin(0.5);
 
-        const startButton = this.add.text(640, 400, 'Iniciar Jogo', {
-            fontSize: '48px',
-            color: '#ff0',
+        // Estilo dos botões
+        const buttonStyle = {
+            fontSize: '32px',
+            color: '#ffffff',
             fontFamily: 'Arial',
-            backgroundColor: '#444',
-            padding: { left: 30, right: 30, top: 10, bottom: 10 },
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+            backgroundColor: '#2c2c2c',
+            padding: { left: 40, right: 40, top: 15, bottom: 15 },
+            align: 'center',
+            fixedWidth: 300,
+        };
 
-        startButton.on('pointerdown', () => {
-            this.scene.start('Start');
-        });
+        const menuOptions = [
+            { label: t.start, action: () => this.scene.start('Start') },
+            { label: t.settings, action: () => this.scene.start('Settings') },
+            { label: t.instructions, action: () => window.open('https://teu-site.com/instrucoes', '_blank') },
+            { label: t.credits, action: () => this.scene.start('Credits') },
+        ];
 
-        startButton.on('pointerover', () => {
-            startButton.setStyle({ color: '#fff', backgroundColor: '#666' });
-        });
-        startButton.on('pointerout', () => {
-            startButton.setStyle({ color: '#ff0', backgroundColor: '#444' });
+        menuOptions.forEach((option, index) => {
+            const button = this.add.text(640, 240 + index * 80, option.label, buttonStyle)
+                .setOrigin(0.5)
+                .setInteractive({ useHandCursor: true });
+
+            button.on('pointerdown', option.action);
+
+            button.on('pointerover', () => {
+                button.setStyle({ backgroundColor: '#444', color: '#ffcc00' });
+                this.tweens.add({
+                    targets: button,
+                    scale: 1.05,
+                    duration: 150,
+                    ease: 'Power2',
+                });
+            });
+
+            button.on('pointerout', () => {
+                button.setStyle({ backgroundColor: '#2c2c2c', color: '#ffffff' });
+                this.tweens.add({
+                    targets: button,
+                    scale: 1,
+                    duration: 150,
+                    ease: 'Power2',
+                });
+            });
         });
     }
 }

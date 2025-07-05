@@ -1,24 +1,21 @@
-import { Start } from './scenes/Start.js';
 import { Menu } from './scenes/Menu.js';
+import { Settings } from './scenes/Settings.js';
+import { Start } from './scenes/Start.js'; // Certifique-se de que esta cena existe
+ // Opcional, se já tiveres esta cena
 
 const config = {
     type: Phaser.AUTO,
     title: 'Overlord Rising',
-    description: '',
     parent: 'game-container',
     width: 1280,
     height: 720,
-    backgroundColor: '#000000',
+    backgroundColor: '#4488aa',
     pixelArt: false,
-    scene: [
-        Menu,
-        Start
-    ],
+    scene: [Menu, Start, Settings],
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
-    },
-}
+    }
+};
 
-new Phaser.Game(config);
-            
+const game = new Phaser.Game(config);
