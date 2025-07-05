@@ -2,9 +2,6 @@ export class Start extends Phaser.Scene {
 
     constructor() {
         super('Start');
-        this.vidas = 3;
-        this.isDead = false;
-        this.gameOverShown = false;
     }
 
     preload() {
@@ -17,6 +14,7 @@ export class Start extends Phaser.Scene {
         this.load.image('plataformaAltE', 'assets/ChaoJogo/PontaPlataformaAltE.png');
         this.load.image('plataformaAltD', 'assets/ChaoJogo/PontaPlataformaAltD.png');
         this.load.image('head', 'assets/HUD/head.png');
+        this.load.image('checkpoint', 'assets/Outros/checkpoint.png');
 
         this.load.spritesheet('player_idle', 'assets/Personagem/Idle.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_run', 'assets/Personagem/Run.png', { frameWidth: 80, frameHeight: 110 });
@@ -26,11 +24,18 @@ export class Start extends Phaser.Scene {
     }
 
     create() {
+        this.vidas = 3;
+        this.isDead = false;
+        this.gameOverShown = false;
+        this.checkpointAtivado = false;
+        this.checkpointX = 100;
+        this.checkpointY = 200;
+
         this.sky = this.add.tileSprite(640, 360, 1280, 720, 'sky').setScrollFactor(0);
         this.clouds = this.add.tileSprite(640, 200, 1280, 300, 'clouds').setScrollFactor(0);
 
-        this.cameras.main.setBounds(0, 0, 10000, 720);
-        this.physics.world.setBounds(0, 0, 10000, 820);
+        this.cameras.main.setBounds(0, 0, 8000, 720);
+        this.physics.world.setBounds(0, 0, 8000, 820);
 
         const groundY = 650;
         const groundTexture = this.textures.get('ground');
@@ -42,14 +47,27 @@ export class Start extends Phaser.Scene {
 
         const blocosElevados = [
             [28, 480], [29, 480], [30, 480],
+            [63, 580], [64, 510], [65, 440],
+            [66, 440], [67, 440], [68, 440],
+            [69, 440], [70, 440], [71, 440], [72, 440], [73, 440], [74, 440]
         ];
-
         for (let [i, y] of blocosElevados) {
             this.chao.create(i * blockWidth, y, 'ground').setOrigin(0, 0).refreshBody();
         }
 
         const blocosManuais = new Set(blocosElevados.map(([i]) => i));
-        const buracos = new Set([6, 7, 8, 9, 10, 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50]);
+
+        const buracos = new Set([
+            ...range(6, 12),
+            ...range(20, 27),
+            ...range(40, 53),
+            ...range(75, 94),
+        
+        ]);
+
+        function range(start, end) {
+            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+        }
 
         for (let i = 0; i < numBlocks; i++) {
             if (!blocosManuais.has(i) && !buracos.has(i)) {
@@ -59,10 +77,23 @@ export class Start extends Phaser.Scene {
 
         const blocosSuporte = [];
         for (let i = 28; i <= 30; i++) {
-            for (let y = 515; y <= 655; y += 35) {
+            for (let y = 510; y <= 655; y += 35) {
                 blocosSuporte.push([i, y]);
             }
         }
+
+        for (let i = 66; i <= 74; i++) {
+            for (let y = 510; y <= 655; y += 35) {
+                blocosSuporte.push([i, y]);
+            }
+        }
+
+        blocosSuporte.push([63, 650]);
+        blocosSuporte.push([64, 650]);
+        blocosSuporte.push([64, 580]);
+        blocosSuporte.push([65, 650]);
+        blocosSuporte.push([65, 580]);
+        blocosSuporte.push([65, 510]);
 
         for (let [i, y] of blocosSuporte) {
             this.chao.create(i * blockWidth, y, 'ground2').setOrigin(0, 0).refreshBody();
@@ -88,6 +119,15 @@ export class Start extends Phaser.Scene {
             [2500, 290, 'plataformaAltD'],
             [3400, 560, 'plataformaE'],
             [3470, 560, 'plataformaD'],
+            [5430, 390, 'plataformaAltE'],
+            [5500, 390, 'plataformaAltD'],
+            [5610, 340, 'plataformaAltE'],
+            [5680, 340, 'plataformaAltD'],
+            [5790, 290, 'plataformaAltE'],
+            [5860, 290, 'plataformaAltD'],
+            [6120, 290, 'plataformaAltE'],
+            [6190, 290, 'ground'],
+            [6260, 290, 'plataformaAltD'],
         ];
 
         for (let [x, y, texture] of plataformasFlutuantes) {
@@ -97,6 +137,18 @@ export class Start extends Phaser.Scene {
 
         this.player = this.physics.add.sprite(100, 200, 'player_idle').setScale(0.8);
         this.player.setCollideWorldBounds(true);
+
+        // === CHECKPOINT ===
+        this.checkpoint = this.physics.add.staticImage(5000, 440, 'checkpoint').setScale(0.7).refreshBody();
+
+        this.physics.add.overlap(this.player, this.checkpoint, () => {
+            if (!this.checkpointAtivado) {
+                this.checkpointAtivado = true;
+                this.checkpointX = this.player.x;
+                this.checkpointY = this.player.y;
+                this.checkpoint.setTint(0x00ff00);
+            }
+        });
 
         this.cameras.main.startFollow(this.player, true, 1, 1, -300, 0);
         this.physics.add.collider(this.player, this.chao);
@@ -182,14 +234,16 @@ export class Start extends Phaser.Scene {
             ).setOrigin(0.5);
 
             this.time.delayedCall(2000, () => {
-                this.scene.start('Menu'); 
+                this.scene.start('Menu');
             });
         }
     }
 
     respawnJogador() {
         this.player.setVelocity(0, 0);
-        this.player.setPosition(100, 200);
+        const x = this.checkpointAtivado ? this.checkpointX : 100;
+        const y = this.checkpointAtivado ? this.checkpointY : 200;
+        this.player.setPosition(x, y);
         this.player.clearTint();
     }
 }
