@@ -11,7 +11,23 @@ const config = {
     height: 720,
     backgroundColor: '#4488aa',
     pixelArt: false,
+
     scene: [Menu, Start, Settings],
+
+
+     
+    // ✅ ATIVAR A FÍSICA
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 600 },
+            debug: false
+        }
+    },
+    
+  
+    
+
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
