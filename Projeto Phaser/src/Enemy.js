@@ -7,12 +7,12 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         this.scene = scene;
-        this.setScale(0.1);
+        this.setScale(0.07); // Mais pequeno
         this.setCollideWorldBounds(true);
 
-        // Hitbox ajustada e levantada para não afundar no chão
-        this.body.setSize(30, 30);
-        this.body.setOffset(5, 25);
+        // Hitbox ajustada para tocar o chão corretamente
+        this.body.setSize(this.width * 0.4, this.height * 0.6);
+        this.body.setOffset(0, this.height * 0.2);
 
         this.speed = 50;
         this.isDead = false;
