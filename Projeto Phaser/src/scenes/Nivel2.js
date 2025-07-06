@@ -1,7 +1,7 @@
-export class Start extends Phaser.Scene {
+export class Nivel2 extends Phaser.Scene {
 
     constructor() {
-        super('Start');
+        super('Nivel2');
     }
 
     preload() {
@@ -14,7 +14,7 @@ export class Start extends Phaser.Scene {
         this.load.image('plataformaAltE', 'assets/ChaoJogo/PontaPlataformaAltE.png');
         this.load.image('plataformaAltD', 'assets/ChaoJogo/PontaPlataformaAltD.png');
         this.load.image('vida', 'assets/HUD/vida.png');
-        this.load.image('checkpoint', 'assets/Outros/checkpoint.png');
+        this.load.image('checkpoint', 'assets/HUD/checkpoint.png');
 
         this.load.spritesheet('player_idle', 'assets/Personagem/Idle.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_run', 'assets/Personagem/Run.png', { frameWidth: 80, frameHeight: 110 });
@@ -24,12 +24,6 @@ export class Start extends Phaser.Scene {
     }
 
     create() {
-        
-console.log("Verificar textura: ", this.textures.exists('vida'));
-
-this.add.image(400, 300, 'vida').setScale(3);
-
-
         this.vidas = 3;
         this.isDead = false;
         this.gameOverShown = false;
@@ -40,98 +34,98 @@ this.add.image(400, 300, 'vida').setScale(3);
         this.sky = this.add.tileSprite(640, 360, 1280, 720, 'sky').setScrollFactor(0);
         this.clouds = this.add.tileSprite(640, 200, 1280, 300, 'clouds').setScrollFactor(0);
 
-        this.cameras.main.setBounds(0, 0, 8000, 720);
-        this.physics.world.setBounds(0, 0, 8000, 820);
+        this.cameras.main.setBounds(0, 0, 10000, 720);
+        this.physics.world.setBounds(0, 0, 10000, 820);
 
         const groundY = 650;
-        const groundTexture = this.textures.get('ground');
-        const blockWidth = groundTexture.getSourceImage().width;
+        const blockWidth = this.textures.get('ground').getSourceImage().width;
         const numBlocks = Math.ceil(10000 / blockWidth);
 
         this.chao = this.physics.add.staticGroup();
         this.plataformasFlutuantes = this.physics.add.staticGroup();
 
+        function range(start, end) {
+            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+        }
+
+        const buracos = new Set([
+            ...range(7, 51),
+            
+        
+        ]);
+        for (let i = 0; i < numBlocks; i++) {
+            if (!buracos.has(i)) {
+                this.chao.create(i * blockWidth, groundY, 'ground').setOrigin(0, 0).refreshBody();
+            }
+        }
+
+        const plataformasFlutuantes = [
+            [600, 560, 'plataformaE'], [670, 560, 'plataformaD'],
+            [900, 530, 'plataformaAltE'], [970, 530, 'ground'], [1040, 530, 'plataformaAltD'],
+            [1300, 500, 'plataformaE'], [1370, 500, 'plataformaD'],
+            [1750, 460, 'plataformaAltE'], [1820, 460, 'plataformaAltD'],
+
+            [2265, 560, 'plataformaE'], [2335, 560, 'plataformaD'],
+            [2500, 490, 'plataformaE'], [2570, 490, 'plataformaD'],
+            [2240, 420, 'plataformaE'], [2310, 420, 'plataformaD'],
+            [2560, 350, 'plataformaE'], [2630, 350, 'plataformaD'],
+            
+            [2960, 280, 'plataformaE'], [3030, 280, 'plataformaD'],
+
+
+            
+            
+            
+            
+            [6400, 360, 'plataformaAltE'], [6470, 360, 'plataformaAltD'],
+            [7400, 400, 'plataformaE'], [7470, 400, 'plataformaD'],
+            [8400, 450, 'plataformaAltE'], [8470, 450, 'plataformaAltD']
+        ];
+
+        for (let [x, y, texture] of plataformasFlutuantes) {
+            const plataforma = this.plataformasFlutuantes.create(x, y, texture).setOrigin(0, 0).refreshBody();
+            plataforma.body.checkCollision.up = true;
+            plataforma.body.checkCollision.down = false;
+            plataforma.body.checkCollision.left = false;
+            plataforma.body.checkCollision.right = false;
+        }
+
         const blocosElevados = [
-            [28, 480], [29, 480], [30, 480],
-            [63, 580], [64, 510], [65, 440],
-            [66, 440], [67, 440], [68, 440],
-            [69, 440], [70, 440], [71, 440], [72, 440], [73, 440], [74, 440]
+            [55, 580], [56, 510], [57, 440], [58,370],
+            ...range(59, 84).map(i => [i, 370]),
+            
         ];
         for (let [i, y] of blocosElevados) {
             this.chao.create(i * blockWidth, y, 'ground').setOrigin(0, 0).refreshBody();
         }
 
-        const blocosManuais = new Set(blocosElevados.map(([i]) => i));
 
-        const buracos = new Set([
-            ...range(6, 12),
-            ...range(20, 27),
-            ...range(40, 53),
-            ...range(75, 94),
+         const blocosSuporte = [];
         
-        ]);
 
-        function range(start, end) {
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-        }
-
-        for (let i = 0; i < numBlocks; i++) {
-            if (!blocosManuais.has(i) && !buracos.has(i)) {
-                this.chao.create(i * blockWidth, groundY, 'ground').setOrigin(0, 0).refreshBody();
-            }
-        }
-
-        const blocosSuporte = [];
-        for (let i = 28; i <= 30; i++) {
-            for (let y = 510; y <= 655; y += 35) {
+        for (let i = 59; i <= 84; i++) {
+            for (let y = 440; y <= 655; y += 35) {
                 blocosSuporte.push([i, y]);
             }
         }
 
-        for (let i = 66; i <= 74; i++) {
-            for (let y = 510; y <= 655; y += 35) {
-                blocosSuporte.push([i, y]);
-            }
-        }
+        blocosSuporte.push([55, 650]);
+        blocosSuporte.push([56, 650]); blocosSuporte.push([56, 580]);
+        blocosSuporte.push([57, 650]); blocosSuporte.push([57, 580]); blocosSuporte.push([57, 510]);
 
-        blocosSuporte.push([63, 650]);
-        blocosSuporte.push([64, 650]);
-        blocosSuporte.push([64, 580]);
-        blocosSuporte.push([65, 650]);
-        blocosSuporte.push([65, 580]);
-        blocosSuporte.push([65, 510]);
+        blocosSuporte.push([58, 650]);
+        blocosSuporte.push([58, 580]);
+        blocosSuporte.push([58, 510]);
+        blocosSuporte.push([58, 440]);
 
         for (let [i, y] of blocosSuporte) {
             this.chao.create(i * blockWidth, y, 'ground2').setOrigin(0, 0).refreshBody();
         }
 
-        const plataformasFlutuantes = [
-            [550, 630, 'plataformaE'], [620, 630, 'ground'], [690, 630, 'plataformaD'],
-            [1500, 600, 'plataformaAltE'],[1570, 600, 'plataformaAltD'],
-            [1700, 550, 'plataformaAltE'], [1770, 550, 'plataformaAltD'],
-            [2900, 630, 'plataformaE'], [2970, 630, 'plataformaD'],
-            [3150, 560, 'plataformaE'], [3220, 560, 'plataformaD'],
-            [2900, 470, 'plataformaE'], [2970, 470, 'plataformaD'], 
-            [2660, 380, 'plataformaE'], [2730, 380, 'plataformaD'],
-            [2430, 290, 'plataformaAltE'], [2500, 290, 'plataformaAltD'],
-            [3400, 560, 'plataformaE'], [3470, 560, 'plataformaD'],
-            [5430, 390, 'plataformaAltE'], [5500, 390, 'plataformaAltD'],
-            [5610, 340, 'plataformaAltE'], [5680, 340, 'plataformaAltD'],
-            [5790, 290, 'plataformaAltE'], [5860, 290, 'plataformaAltD'],
-            [6120, 290, 'plataformaAltE'], [6190, 290, 'ground'], [6260, 290, 'plataformaAltD'],
-        ];
-
-        for (let [x, y, texture] of plataformasFlutuantes) {
-            const bloco = this.plataformasFlutuantes.create(x, y, texture).setOrigin(0, 0).refreshBody();
-            bloco.body.checkCollision.down = false;
-        }
-
         this.player = this.physics.add.sprite(100, 200, 'player_idle').setScale(0.8);
         this.player.setCollideWorldBounds(true);
 
-        // === CHECKPOINT ===
-        this.checkpoint = this.physics.add.staticImage(5000, 440, 'checkpoint').setScale(0.7).refreshBody();
-
+        this.checkpoint = this.physics.add.staticImage(5500, 340, 'checkpoint').setScale(0.015).refreshBody();
         this.physics.add.overlap(this.player, this.checkpoint, () => {
             if (!this.checkpointAtivado) {
                 this.checkpointAtivado = true;
@@ -152,9 +146,9 @@ this.add.image(400, 300, 'vida').setScale(3);
         this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 0 }), frameRate: 5 });
 
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-        this.headIcon = this.add.image(1200, 40, 'vida').setScrollFactor(0).setScale(0.6).setOrigin(1, 0);
-
+        this.headIcon = this.add.image(1200, 30, 'vida').setScrollFactor(0).setScale(0.05).setOrigin(1, 0);
         this.vidasText = this.add.text(1210, 40, 'x ' + this.vidas, {
             fontSize: '32px',
             fill: '#ffffff',
@@ -162,13 +156,13 @@ this.add.image(400, 300, 'vida').setScale(3);
         }).setScrollFactor(0);
     }
 
-   update() {
+    update() {
     if (this.clouds) this.clouds.tilePositionX += 0.3;
     if (!this.player || !this.cursors) return;
 
     const noChao = this.player.body.blocked.down;
 
-    const velocidadeNormal = 160;
+    const velocidadeNormal = 460;
     const velocidadeCorrida = 280;
     const velocidadeAtual = this.shiftKey.isDown ? velocidadeCorrida : velocidadeNormal;
 
@@ -201,34 +195,19 @@ this.add.image(400, 300, 'vida').setScale(3);
 
     perderVida() {
         this.vidas--;
-        if (this.vidas >= 0) {
-            this.vidasText.setText('x ' + this.vidas);
-        }
+        if (this.vidas >= 0) this.vidasText.setText('x ' + this.vidas);
 
         if (this.vidas > 0) {
             this.respawnJogador();
         } else if (!this.gameOverShown) {
             this.isDead = true;
             this.gameOverShown = true;
-
             this.player.setTint(0xff0000);
             this.player.anims.play('death');
-
-            const gameOverText = this.add.text(
-                this.cameras.main.scrollX + 640, 300,
-                'GAME OVER',
-                {
-                    fontSize: '64px',
-                    fill: '#ff0000',
-                    fontFamily: 'Arial',
-                    stroke: '#000000',
-                    strokeThickness: 6
-                }
-            ).setOrigin(0.5);
-
-            this.time.delayedCall(2000, () => {
-                this.scene.start('Menu');
-            });
+            this.add.text(this.cameras.main.scrollX + 640, 300, 'GAME OVER', {
+                fontSize: '64px', fill: '#ff0000', fontFamily: 'Arial', stroke: '#000', strokeThickness: 6
+            }).setOrigin(0.5);
+            this.time.delayedCall(2000, () => this.scene.start('Menu'));
         }
     }
 

@@ -1,6 +1,7 @@
 import { Menu } from './scenes/Menu.js';
 import { Settings } from './scenes/Settings.js';
-import { Start } from './scenes/Start.js'; // Certifique-se de que esta cena existe
+import { Start } from './scenes/Start.js';
+import { Nivel2 } from './scenes/Nivel2.js'; // Certifique-se de que esta cena existe
  // Opcional, se já tiveres esta cena
 
 const config = {
@@ -12,7 +13,7 @@ const config = {
     backgroundColor: '#4488aa',
     pixelArt: false,
 
-    scene: [Menu, Start, Settings],
+    scene: [Menu,Nivel2, Start, Settings],
 
 
      
