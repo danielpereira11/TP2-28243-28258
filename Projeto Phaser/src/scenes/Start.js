@@ -1,3 +1,4 @@
+import Enemy from '../Enemy.js';
 export class Start extends Phaser.Scene {
 
     constructor() {
@@ -21,6 +22,16 @@ export class Start extends Phaser.Scene {
         this.load.spritesheet('player_jump', 'assets/Personagem/Jump.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_fall', 'assets/Personagem/Fall.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_death', 'assets/Personagem/Death.png', { frameWidth: 80, frameHeight: 110 });
+
+        for (let i = 0; i <= 5; i++) {
+            this.load.image('enemy_idle_' + i, 'assets/inimigo/Idle/0_Necromancer_of_the_Shadow_Idle_00' + i + '.png');
+        }
+
+        for (let i = 0; i <= 14; i++) {
+            const num = i.toString().padStart(3, '0');
+            this.load.image('enemy_die_' + i, 'assets/inimigo/Dying/0_Necromancer_of_the_Shadow_Dying_' + num + '.png');
+        }
+
     }
 
     create() {
@@ -151,6 +162,62 @@ this.add.image(400, 300, 'vida').setScale(3);
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('player_fall', { start: 0, end: 0 }), frameRate: 5 });
         this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 0 }), frameRate: 5 });
 
+        
+        // === ANIMAÇÕES DOS INIMIGOS ===
+        this.anims.create({
+            key: 'enemy_idle',
+            frames: [...Array(6).keys()].map(i => ({ key: 'enemy_idle_' + i })),
+            frameRate: 8,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'enemy_die',
+            frames: [...Array(15).keys()].map(i => ({
+                key: 'enemy_die_' + i
+            })),
+            frameRate: 12,
+            repeat: 0
+        });
+
+        // === CRIAR INIMIGOS ===
+        this.inimigos = this.physics.add.group();
+
+        const inimigo1 = new Enemy(this, 800, 0);
+        const inimigo2 = new Enemy(this, 1200, 0);
+
+        this.inimigos.add(inimigo1);
+        this.inimigos.add(inimigo2);
+        this.positionEnemyOnGround(inimigo1, 630);
+        this.positionEnemyOnGround(inimigo2, 630);
+
+        // === COLISÕES DOS INIMIGOS ===
+        this.physics.add.collider(this.inimigos, this.chao);
+
+        
+        
+        this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
+            const isFalling = player.body.velocity.y > 0;
+            const isAbove = player.body.bottom <= inimigo.body.top + 5;
+
+            if (isFalling && isAbove && !inimigo.isDead) {
+                inimigo.die();
+                player.setVelocityY(-200);
+            } else if (!inimigo.isDead) {
+                this.vidas -= 1;
+                this.vidasText.setText('x ' + this.vidas);
+                if (this.vidas <= 0) {
+                    this.perderVida();
+                } else {
+                    this.respawnJogador();
+                }
+            }
+        });
+
+
+
+
+
         this.cursors = this.input.keyboard.createCursorKeys();
 
         this.headIcon = this.add.image(1200, 40, 'vida').setScrollFactor(0).setScale(0.6).setOrigin(1, 0);
@@ -162,9 +229,12 @@ this.add.image(400, 300, 'vida').setScale(3);
         }).setScrollFactor(0);
     }
 
-   update() {
-    if (this.clouds) this.clouds.tilePositionX += 0.3;
-    if (!this.player || !this.cursors) return;
+    update() {
+        if (this.clouds) {
+            this.clouds.tilePositionX += 0.3;
+        }
+
+        if (!this.player || !this.cursors) return;
 
     const noChao = this.player.body.blocked.down;
 
@@ -194,10 +264,10 @@ this.add.image(400, 300, 'vida').setScale(3);
         this.player.anims.play('fall', true);
     }
 
-    if (this.player.y > 720 && !this.isDead) {
-        this.perderVida();
+        if (this.player.y > 720 && !this.isDead) {
+            this.perderVida();
+        }
     }
-}
 
     perderVida() {
         this.vidas--;
