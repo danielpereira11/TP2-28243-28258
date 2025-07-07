@@ -147,9 +147,36 @@ export class Nivel2 extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
+            this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                if (!this.isDead && this.tempoRestante > 0) {
+                    this.tempoRestante--;
+                    this.tempoText.setText('Tempo: ' + this.tempoRestante);
+                    if (this.tempoRestante === 0) {
+                        this.perderVida();
+                    }
+                }
+            },
+            loop: true
+        });
+
         this.headIcon = this.add.image(1200, 30, 'vida').setScrollFactor(0).setScale(0.05).setOrigin(1, 0);
         this.vidasText = this.add.text(1210, 40, 'x ' + this.vidas, {
             fontSize: '32px', fill: '#ffffff', fontFamily: 'Arial'
+        }).setScrollFactor(0);
+
+        this.tempoRestante = 300;
+        this.pontuacao = 0;
+        this.tempoText = this.add.text(970, 40, 'Tempo: ' + this.tempoRestante, {
+            fontSize: '32px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setScrollFactor(0);
+        this.pontuacaoText = this.add.text(750, 40, 'Pontos: ' + this.pontuacao, {
+            fontSize: '32px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
         }).setScrollFactor(0);
     }
 
@@ -281,5 +308,10 @@ export class Nivel2 extends Phaser.Scene {
         const y = this.checkpointAtivado ? this.checkpointY : 200;
         this.player.setPosition(x, y);
         this.player.clearTint();
+    }
+
+    adicionarPontos(valor) {
+        this.pontuacao += valor;
+        this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
     }
 }

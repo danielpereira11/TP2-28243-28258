@@ -43,6 +43,7 @@ export class Start extends Phaser.Scene {
         this.checkpointAtivado = false;
         this.checkpointX = 100;
         this.checkpointY = 200;
+        this.nivelConcluido = false;
 
         this.sky = this.add.tileSprite(640, 360, 1280, 720, 'sky').setScrollFactor(0);
         this.clouds = this.add.tileSprite(640, 200, 1280, 300, 'clouds').setScrollFactor(0);
@@ -335,6 +336,10 @@ export class Start extends Phaser.Scene {
             this.perderVida();
         }
 
+        if (this.player.x >= 7700 && !this.nivelConcluido) {
+        this.concluirNivel();
+    }
+
         if (this.inimigos) {
             this.inimigos.children.iterate(inimigo => {
                 if (inimigo && inimigo.update) {
@@ -389,5 +394,38 @@ export class Start extends Phaser.Scene {
         this.pontuacao += valor;
         this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
     }
+
+concluirNivel() {
+    this.nivelConcluido = true;
+    this.physics.pause();
+    this.player.setTint(0x00ff00);
+
+    // Coordenadas do centro visível da câmara
+    const x = this.cameras.main.midPoint.x;
+    const y = this.cameras.main.midPoint.y;
+
+    // Caixa de fundo
+    const caixa = this.add.rectangle(x, y, 600, 200, 0x000000, 0.7)
+        .setOrigin(0.5)
+        .setDepth(1000); // Garantir que está acima de tudo
+
+    // Texto principal
+    const mensagem = this.add.text(x, y, 'Nível 1 com sucesso', {
+        fontSize: '64px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        stroke: '#ffaa00',
+        strokeThickness: 4
+    })
+    .setOrigin(0.5)
+    .setDepth(1001); // Texto acima da caixa
+
+    // Transição para o próximo nível após 3 segundos
+    this.time.delayedCall(3000, () => {
+        this.scene.start('Nivel2');
+    });
+}
+
+
 
 }
