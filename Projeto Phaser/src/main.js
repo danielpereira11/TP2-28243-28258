@@ -1,8 +1,8 @@
 import { Menu } from './scenes/Menu.js';
 import { Settings } from './scenes/Settings.js';
 import { Start } from './scenes/Start.js';
-import { Nivel2 } from './scenes/Nivel2.js'; // Certifique-se de que esta cena existe
- // Opcional, se já tiveres esta cena
+import { Nivel2 } from './scenes/Nivel2.js';
+import { Nivel3 } from './scenes/Nivel3.js'; 
 
 const config = {
     type: Phaser.AUTO,
@@ -13,11 +13,11 @@ const config = {
     backgroundColor: '#4488aa',
     pixelArt: false,
 
-    scene: [Menu,Nivel2, Start, Settings],
+    scene: [Menu,Nivel2, Nivel3, Start, Settings],
 
 
      
-    // ✅ ATIVAR A FÍSICA
+    
     physics: {
         default: 'arcade',
         arcade: {
