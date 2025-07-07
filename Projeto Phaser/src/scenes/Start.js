@@ -15,7 +15,9 @@ export class Start extends Phaser.Scene {
         this.load.image('plataformaAltE', 'assets/ChaoJogo/PontaPlataformaAltE.png');
         this.load.image('plataformaAltD', 'assets/ChaoJogo/PontaPlataformaAltD.png');
         this.load.image('vida', 'assets/HUD/vida.png');
-        this.load.image('checkpoint', 'assets/Outros/checkpoint.png');
+        this.load.image('checkpoint', 'assets/HUD/checkpoint.png');
+        this.load.image('powerup_vida', 'assets/HUD/vida.png');
+
 
         this.load.spritesheet('player_idle', 'assets/Personagem/Idle.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_run', 'assets/Personagem/Run.png', { frameWidth: 80, frameHeight: 110 });
@@ -35,12 +37,6 @@ export class Start extends Phaser.Scene {
     }
 
     create() {
-        
-console.log("Verificar textura: ", this.textures.exists('vida'));
-
-this.add.image(400, 300, 'vida').setScale(3);
-
-
         this.vidas = 3;
         this.isDead = false;
         this.gameOverShown = false;
@@ -117,31 +113,49 @@ this.add.image(400, 300, 'vida').setScale(3);
         }
 
         const plataformasFlutuantes = [
-            [550, 630, 'plataformaE'], [620, 630, 'ground'], [690, 630, 'plataformaD'],
-            [1500, 600, 'plataformaAltE'],[1570, 600, 'plataformaAltD'],
-            [1700, 550, 'plataformaAltE'], [1770, 550, 'plataformaAltD'],
-            [2900, 630, 'plataformaE'], [2970, 630, 'plataformaD'],
-            [3150, 560, 'plataformaE'], [3220, 560, 'plataformaD'],
-            [2900, 470, 'plataformaE'], [2970, 470, 'plataformaD'], 
-            [2660, 380, 'plataformaE'], [2730, 380, 'plataformaD'],
-            [2430, 290, 'plataformaAltE'], [2500, 290, 'plataformaAltD'],
-            [3400, 560, 'plataformaE'], [3470, 560, 'plataformaD'],
-            [5430, 390, 'plataformaAltE'], [5500, 390, 'plataformaAltD'],
-            [5610, 340, 'plataformaAltE'], [5680, 340, 'plataformaAltD'],
-            [5790, 290, 'plataformaAltE'], [5860, 290, 'plataformaAltD'],
-            [6120, 290, 'plataformaAltE'], [6190, 290, 'ground'], [6260, 290, 'plataformaAltD'],
+            [550, 630, 'plataformaE'],
+            [620, 630, 'ground'],
+            [690, 630, 'plataformaD'],
+
+            [1500, 600, 'plataformaAltE'],
+            [1570, 600, 'plataformaAltD'],
+            [1700, 550, 'plataformaAltE'],
+            [1770, 550, 'plataformaAltD'],
+            [2900, 630, 'plataformaE'],
+            [2970, 630, 'plataformaD'],
+            [3150, 560, 'plataformaE'],
+            [3220, 560, 'plataformaD'],
+            [2900, 470, 'plataformaE'],
+            [2970, 470, 'plataformaD'],
+            [2660, 380, 'plataformaE'],
+            [2730, 380, 'plataformaD'],
+            [2430, 290, 'plataformaAltE'],
+            [2500, 290, 'plataformaAltD'],
+            [3400, 560, 'plataformaE'],
+            [3470, 560, 'plataformaD'],
+            [5430, 390, 'plataformaAltE'],
+            [5500, 390, 'plataformaAltD'],
+            [5610, 340, 'plataformaAltE'],
+            [5680, 340, 'plataformaAltD'],
+            [5790, 290, 'plataformaAltE'],
+            [5860, 290, 'plataformaAltD'],
+            [6120, 290, 'plataformaAltE'],
+            [6190, 290, 'ground'],
+            [6260, 290, 'plataformaAltD'],
         ];
 
         for (let [x, y, texture] of plataformasFlutuantes) {
             const bloco = this.plataformasFlutuantes.create(x, y, texture).setOrigin(0, 0).refreshBody();
             bloco.body.checkCollision.down = false;
+            bloco.body.checkCollision.left = false;
+            bloco.body.checkCollision.right = false;
         }
 
         this.player = this.physics.add.sprite(100, 200, 'player_idle').setScale(0.8);
         this.player.setCollideWorldBounds(true);
 
         // === CHECKPOINT ===
-        this.checkpoint = this.physics.add.staticImage(5000, 440, 'checkpoint').setScale(0.7).refreshBody();
+        this.checkpoint = this.physics.add.staticImage(5000, 400, 'checkpoint').setScale(0.015).refreshBody();
 
         this.physics.add.overlap(this.player, this.checkpoint, () => {
             if (!this.checkpointAtivado) {
@@ -183,24 +197,23 @@ this.add.image(400, 300, 'vida').setScale(3);
         // === CRIAR INIMIGOS ===
         this.inimigos = this.physics.add.group();
 
-        const inimigo1 = new Enemy(this, 800, 0);
-        const inimigo2 = new Enemy(this, 1200, 0);
+        const inimigo1 = new Enemy(this, 800, 500);
+        const inimigo2 = new Enemy(this, 1200, 500);
 
         this.inimigos.add(inimigo1);
         this.inimigos.add(inimigo2);
-        this.positionEnemyOnGround(inimigo1, 630);
-        this.positionEnemyOnGround(inimigo2, 630);
 
         // === COLISÕES DOS INIMIGOS ===
         this.physics.add.collider(this.inimigos, this.chao);
 
-        
-        
         this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
-            const isFalling = player.body.velocity.y > 0;
-            const isAbove = player.body.bottom <= inimigo.body.top + 5;
+            const playerBounds = player.getBounds();
+            const enemyBounds = inimigo.getBounds();
 
-            if (isFalling && isAbove && !inimigo.isDead) {
+            const isFalling = player.body.velocity.y > 0;
+            const isOnTop = playerBounds.bottom < enemyBounds.top + 10;
+
+            if (isFalling && isOnTop) {
                 inimigo.die();
                 player.setVelocityY(-200);
             } else if (!inimigo.isDead) {
@@ -214,19 +227,51 @@ this.add.image(400, 300, 'vida').setScale(3);
             }
         });
 
+        // POWER-UP DE VIDA 
+        this.powerUpsVida = this.physics.add.staticGroup();
+        this.powerUpsVida.create(2500, 260, 'vida').setScale(0.07).refreshBody();
 
-
+        // COLISÃO COM POWER-UP
+        this.physics.add.overlap(this.player, this.powerUpsVida, (player, powerup) => {
+            if (this.vidas < 4) {
+                this.vidas++;
+                this.vidasText.setText('x ' + this.vidas);
+            }
+            powerup.destroy();
+        }, null, this);  
 
 
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        this.headIcon = this.add.image(1200, 40, 'vida').setScrollFactor(0).setScale(0.6).setOrigin(1, 0);
+        this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                if (!this.isDead && this.tempoRestante > 0) {
+                    this.tempoRestante--;
+                    this.tempoText.setText('Tempo: ' + this.tempoRestante);
+                    if (this.tempoRestante === 0) {
+                        this.perderVida();
+                    }
+                }
+            },
+            loop: true
+        });
+    
 
+        this.headIcon = this.add.image(1200, 30, 'vida').setScrollFactor(0).setScale(0.05).setOrigin(1, 0);
         this.vidasText = this.add.text(1210, 40, 'x ' + this.vidas, {
             fontSize: '32px',
             fill: '#ffffff',
             fontFamily: 'Arial'
         }).setScrollFactor(0);
+
+        this.tempoRestante = 300;
+        this.tempoText = this.add.text(970, 40, 'Tempo: ' + this.tempoRestante, {
+            fontSize: '32px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setScrollFactor(0);
+    
     }
 
     update() {
@@ -236,37 +281,42 @@ this.add.image(400, 300, 'vida').setScale(3);
 
         if (!this.player || !this.cursors) return;
 
-    const noChao = this.player.body.blocked.down;
+        const noChao = this.player.body.blocked.down;
 
-    const velocidadeNormal = 160;
-    const velocidadeCorrida = 280;
-    const velocidadeAtual = this.shiftKey.isDown ? velocidadeCorrida : velocidadeNormal;
+        if (this.cursors.left.isDown) {
+            this.player.setVelocityX(-160);
+            this.player.setFlipX(true);
+            if (noChao) this.player.anims.play('run', true);
+        } else if (this.cursors.right.isDown) {
+            this.player.setVelocityX(460);
+            this.player.setFlipX(false);
+            if (noChao) this.player.anims.play('run', true);
+        } else {
+            this.player.setVelocityX(0);
+            if (noChao) this.player.anims.play('idle', true);
+        }
 
-    if (this.cursors.left.isDown) {
-        this.player.setVelocityX(-velocidadeAtual);
-        this.player.setFlipX(true);
-        if (noChao) this.player.anims.play('run', true);
-    } else if (this.cursors.right.isDown) {
-        this.player.setVelocityX(velocidadeAtual);
-        this.player.setFlipX(false);
-        if (noChao) this.player.anims.play('run', true);
-    } else {
-        this.player.setVelocityX(0);
-        if (noChao) this.player.anims.play('idle', true);
-    }
+        if (this.cursors.up.isDown && noChao) {
+            this.player.setVelocityY(-330);
+            this.player.anims.play('jump');
+        }
 
-    if (this.cursors.up.isDown && noChao) {
-        this.player.setVelocityY(-330);
-        this.player.anims.play('jump');
-    }
-
-    if (!noChao && this.player.body.velocity.y > 0) {
-        this.player.anims.play('fall', true);
-    }
+        if (!noChao && this.player.body.velocity.y > 0) {
+            this.player.anims.play('fall', true);
+        }
 
         if (this.player.y > 720 && !this.isDead) {
             this.perderVida();
         }
+
+        if (this.inimigos) {
+            this.inimigos.children.iterate(inimigo => {
+                if (inimigo && inimigo.update) {
+                    inimigo.update(this.player);
+                }
+            });
+        }
+
     }
 
     perderVida() {
