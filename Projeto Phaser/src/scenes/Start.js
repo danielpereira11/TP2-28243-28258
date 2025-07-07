@@ -222,27 +222,21 @@ export class Start extends Phaser.Scene {
         this.physics.add.collider(this.inimigos, this.chao);
         this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
 
-        this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
-            const playerBounds = player.getBounds();
-            const enemyBounds = inimigo.getBounds();
-
-            const isFalling = player.body.velocity.y > 0;
-            const isOnTop = playerBounds.bottom < enemyBounds.top + 10;
-
-            if (isFalling && isOnTop) {
-                inimigo.die();
-               // this.adicionarPontos(100);  // Por matar inimigo
-                player.setVelocityY(-200);
-            } else if (!inimigo.isDead) {
-                this.vidas -= 1;
-                this.vidasText.setText('x ' + this.vidas);
-                if (this.vidas <= 0) {
-                    this.perderVida();
-                } else {
-                    this.respawnJogador();
-                }
-            }
-        });
+       this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
+    if (player.body.touching.down && inimigo.body.touching.up && !inimigo.isDead) {
+        inimigo.die();
+        this.adicionarPontos(250);
+        player.setVelocityY(-250);
+    } else if (!inimigo.isDead) {
+        this.vidas--;
+        this.vidasText.setText('x ' + this.vidas);
+        if (this.vidas <= 0) {
+            this.perderVida();
+        } else {
+            this.respawnJogador();
+        }
+    }
+});
 
         // POWER-UP DE VIDA 
         this.powerUpsVida = this.physics.add.staticGroup();
