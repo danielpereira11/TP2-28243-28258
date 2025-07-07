@@ -15,7 +15,9 @@ export class Start extends Phaser.Scene {
         this.load.image('plataformaAltE', 'assets/ChaoJogo/PontaPlataformaAltE.png');
         this.load.image('plataformaAltD', 'assets/ChaoJogo/PontaPlataformaAltD.png');
         this.load.image('vida', 'assets/HUD/vida.png');
-        this.load.image('checkpoint', 'assets/Outros/checkpoint.png');
+        this.load.image('checkpoint', 'assets/HUD/checkpoint.png');
+        this.load.image('powerup_vida', 'assets/HUD/vida.png');
+
 
         this.load.spritesheet('player_idle', 'assets/Personagem/Idle.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_run', 'assets/Personagem/Run.png', { frameWidth: 80, frameHeight: 110 });
@@ -114,6 +116,7 @@ export class Start extends Phaser.Scene {
             [550, 630, 'plataformaE'],
             [620, 630, 'ground'],
             [690, 630, 'plataformaD'],
+
             [1500, 600, 'plataformaAltE'],
             [1570, 600, 'plataformaAltD'],
             [1700, 550, 'plataformaAltE'],
@@ -144,13 +147,15 @@ export class Start extends Phaser.Scene {
         for (let [x, y, texture] of plataformasFlutuantes) {
             const bloco = this.plataformasFlutuantes.create(x, y, texture).setOrigin(0, 0).refreshBody();
             bloco.body.checkCollision.down = false;
+            bloco.body.checkCollision.left = false;
+            bloco.body.checkCollision.right = false;
         }
 
         this.player = this.physics.add.sprite(100, 200, 'player_idle').setScale(0.8);
         this.player.setCollideWorldBounds(true);
 
         // === CHECKPOINT ===
-        this.checkpoint = this.physics.add.staticImage(5000, 440, 'checkpoint').setScale(0.7).refreshBody();
+        this.checkpoint = this.physics.add.staticImage(5000, 400, 'checkpoint').setScale(0.015).refreshBody();
 
         this.physics.add.overlap(this.player, this.checkpoint, () => {
             if (!this.checkpointAtivado) {
@@ -201,7 +206,6 @@ export class Start extends Phaser.Scene {
         // === COLISÕES DOS INIMIGOS ===
         this.physics.add.collider(this.inimigos, this.chao);
 
-        
         this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
             const playerBounds = player.getBounds();
             const enemyBounds = inimigo.getBounds();
@@ -223,7 +227,18 @@ export class Start extends Phaser.Scene {
             }
         });
 
+        // POWER-UP DE VIDA 
+        this.powerUpsVida = this.physics.add.staticGroup();
+        this.powerUpsVida.create(2500, 260, 'vida').setScale(0.07).refreshBody();
 
+        // COLISÃO COM POWER-UP
+        this.physics.add.overlap(this.player, this.powerUpsVida, (player, powerup) => {
+            if (this.vidas < 4) {
+                this.vidas++;
+                this.vidasText.setText('x ' + this.vidas);
+            }
+            powerup.destroy();
+        }, null, this);  
 
 
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -273,7 +288,7 @@ export class Start extends Phaser.Scene {
             this.player.setFlipX(true);
             if (noChao) this.player.anims.play('run', true);
         } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(160);
+            this.player.setVelocityX(460);
             this.player.setFlipX(false);
             if (noChao) this.player.anims.play('run', true);
         } else {
