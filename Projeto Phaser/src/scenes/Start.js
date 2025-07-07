@@ -398,6 +398,20 @@ concluirNivel() {
     const x = this.cameras.main.midPoint.x;
     const y = this.cameras.main.midPoint.y;
 
+    let tempoBonus = this.tempoRestante;
+this.tempoRestante = 0;
+
+const intervalo = this.time.addEvent({
+    delay: 50,
+    repeat: tempoBonus - 1,
+    callback: () => {
+        this.adicionarPontos(25);
+        tempoBonus--;
+        this.tempoText.setText('Tempo: ' + tempoBonus);
+    }
+});
+    
+
     // Caixa de fundo
     const caixa = this.add.rectangle(x, y, 600, 200, 0x000000, 0.7)
         .setOrigin(0.5)
@@ -415,7 +429,8 @@ concluirNivel() {
     .setDepth(1001); // Texto acima da caixa
 
     // Transição para o próximo nível após 3 segundos
-    this.time.delayedCall(3000, () => {
+    this.time.delayedCall(tempoBonus * 50 + 1000, () => {
+        this.registry.set('pontos', this.pontuacao);
         this.scene.start('Nivel2');
     });
 }

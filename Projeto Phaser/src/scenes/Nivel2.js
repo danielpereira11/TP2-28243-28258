@@ -267,45 +267,40 @@ export class Nivel2 extends Phaser.Scene {
                 this.physics.add.collider(this.inimigos, this.chao);
                 this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
         
-                this.physics.add.overlap(this.player, this.inimigos, (player, inimigo) => {
-                    const playerBounds = player.getBounds();
-                    const enemyBounds = inimigo.getBounds();
-        
-                    const isFalling = player.body.velocity.y > 0;
-                    const isOnTop = playerBounds.bottom < enemyBounds.top + 10;
-        
-                    if (isFalling && isOnTop) {
-                        inimigo.die();
-                       // this.adicionarPontos(100);  // Por matar inimigo
-                        player.setVelocityY(-200);
-                    } else if (!inimigo.isDead) {
-                        this.vidas -= 1;
-                        this.vidasText.setText('x ' + this.vidas);
-                        if (this.vidas <= 0) {
-                            this.perderVida();
-                        } else {
-                            this.respawnJogador();
-                        }
-                    }
-                });
+                 this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
+    if (player.body.touching.down && inimigo.body.touching.up && !inimigo.isDead) {
+        inimigo.die();
+        this.adicionarPontos(250);
+        player.setVelocityY(-250);
+    } else if (!inimigo.isDead) {
+        this.vidas--;
+        this.vidasText.setText('x ' + this.vidas);
+        if (this.vidas <= 0) {
+            this.perderVida();
+        } else {
+            this.respawnJogador();
+        }
+    }
+});
 
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-            this.time.addEvent({
-            delay: 1000,
-            callback: () => {
-                if (!this.isDead && this.tempoRestante > 0) {
-                    this.tempoRestante--;
-                    this.tempoText.setText('Tempo: ' + this.tempoRestante);
-                    if (this.tempoRestante === 0) {
-                        this.perderVida();
-                    }
-                }
-            },
-            loop: true
-        });
+           this.time.addEvent({
+    delay: 1000,
+    callback: () => {
+        if (!this.isDead) {
+            this.tempoRestante--;
+            this.tempoText.setText('Tempo: ' + Math.max(this.tempoRestante, 0));
+
+            if (this.tempoRestante <= 0) {
+                this.perderVida();
+            }
+        }
+    },
+    loop: true
+});
 
         this.headIcon = this.add.image(1200, 30, 'vida').setScrollFactor(0).setScale(0.05).setOrigin(1, 0);
         this.vidasText = this.add.text(1210, 40, 'x ' + this.vidas, {
@@ -313,7 +308,7 @@ export class Nivel2 extends Phaser.Scene {
         }).setScrollFactor(0);
 
         this.tempoRestante = 300;
-        this.pontuacao = 0;
+        this.pontuacao = this.registry.get('pontos') || 0;
         this.tempoText = this.add.text(970, 40, 'Tempo: ' + this.tempoRestante, {
             fontSize: '32px',
             fill: '#ffffff',
