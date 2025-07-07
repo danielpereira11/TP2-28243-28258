@@ -222,7 +222,7 @@ export class Start extends Phaser.Scene {
         this.physics.add.collider(this.inimigos, this.chao);
         this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
 
-        this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
+        this.physics.add.overlap(this.player, this.inimigos, (player, inimigo) => {
             const playerBounds = player.getBounds();
             const enemyBounds = inimigo.getBounds();
 

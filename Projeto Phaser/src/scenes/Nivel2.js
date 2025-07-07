@@ -1,3 +1,4 @@
+import Enemy from '../Enemy.js';
 export class Nivel2 extends Phaser.Scene {
 
     constructor() {
@@ -15,21 +16,53 @@ export class Nivel2 extends Phaser.Scene {
         this.load.image('plataformaAltD', 'assets/ChaoJogo/PontaPlataformaAltD.png');
         this.load.image('vida', 'assets/HUD/vida.png');
         this.load.image('checkpoint', 'assets/HUD/checkpoint.png');
+        this.load.image('PowerRun1', 'assets/Power/PowerRun1.png');
+        this.load.image('PowerRun2', 'assets/Power/PowerRun2.png');
+        this.load.image('slash', 'assets/Power/ataque.png');
+        this.load.image('head', 'assets/Power/head.png');
+
+
 
         this.load.spritesheet('player_idle', 'assets/Personagem/Idle.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_run', 'assets/Personagem/Run.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_jump', 'assets/Personagem/Jump.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_fall', 'assets/Personagem/Fall.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_death', 'assets/Personagem/Death.png', { frameWidth: 80, frameHeight: 110 });
+        this.load.spritesheet('player_power_idle', 'assets/Power/PowerIdle.png', { frameWidth: 80, frameHeight: 110 });
+        this.load.spritesheet('player_power_run', 'assets/Power/PowerRun.png', { frameWidth: 80, frameHeight: 110 });
+        this.load.spritesheet('player_power_jump', 'assets/Power/PowerJump.png', { frameWidth: 80, frameHeight: 110 });
+        this.load.spritesheet('player_power_fall', 'assets/Power/PowerFall.png', { frameWidth: 80, frameHeight: 110 });
+        this.load.spritesheet('player_power_death', 'assets/Power/PowerDeath.png', { frameWidth: 80, frameHeight: 110 });
+
+        
+        for (let i = 0; i <= 5; i++) {
+            this.load.image('enemy_idle_' + i, 'assets/inimigo/Idle/0_Necromancer_of_the_Shadow_Idle_00' + i + '.png');
+        }
+
+        for (let i = 0; i <= 14; i++) {
+            const num = i.toString().padStart(3, '0');
+            this.load.image('enemy_die_' + i, 'assets/inimigo/Dying/0_Necromancer_of_the_Shadow_Dying_' + num + '.png');
+        }
+
+
     }
 
     create() {
         this.vidas = 3;
+        this.temPoder = false;//saber se o jogador tem power
+        this.ataques = this.physics.add.group({
+            allowGravity: false,
+            runChildUpdate: true
+        });
+
+        this.teclaAtaque = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z); // tecla Z
+
         this.isDead = false;
         this.gameOverShown = false;
         this.checkpointAtivado = false;
         this.checkpointX = 100;
         this.checkpointY = 200;
+
         this.plataformaAtual = null;
 
         this.sky = this.add.tileSprite(640, 360, 1280, 720, 'sky').setScrollFactor(0);
@@ -43,6 +76,17 @@ export class Nivel2 extends Phaser.Scene {
         const numBlocks = Math.ceil(15000 / blockWidth);
 
         this.chao = this.physics.add.staticGroup();
+
+        // Criar inimigos
+        this.inimigos = [];
+
+        this.inimigos.push(new Enemy(this, 1000, 630));
+        this.inimigos.push(new Enemy(this, 2000, 630));
+        // Adiciona mais se quiseres
+
+        // Colisão inimigos com chão
+        this.physics.add.collider(this.inimigos, this.chao);
+
         this.plataformasFlutuantes = this.physics.add.staticGroup();
         this.plataformasCaem = this.physics.add.group({ allowGravity: false, immovable: true });
         this.plataformasMoveis = this.add.group();
@@ -114,7 +158,16 @@ export class Nivel2 extends Phaser.Scene {
         this.adicionarPlataformaOscilante(13000, 480, 'horizontal', 150, 2000);
         this.adicionarPlataformaOscilante(13300, 460, 'horizontal', 150, 2000);
 
+
+
         this.player = this.physics.add.sprite(100, 200, 'player_idle').setScale(0.8);
+        this.powerUpTroca = this.physics.add.staticImage(1750, 380, 'head').setScale(0.5).refreshBody();
+
+        this.physics.add.overlap(this.player, this.powerUpTroca, () => {
+            this.temPoder = true;
+            this.powerUpTroca.destroy();
+        }, null, this);
+
         this.player.setCollideWorldBounds(true);
 
         this.checkpoint = this.physics.add.staticImage(11000, 615, 'checkpoint').setScale(0.015).refreshBody();
@@ -138,11 +191,104 @@ export class Nivel2 extends Phaser.Scene {
             }
         }, null, this);
 
+        this.physics.add.collider(this.inimigos, this.chao); // inimigo com chão
+        this.physics.add.overlap(this.ataques, this.inimigos, (ataque, inimigo) => {
+            ataque.destroy();
+
+            if(!inimigo.isDead && typeof inimigo.die === 'function') {
+                inimigo.die();
+                this.adicionarPontos(100); // opcional
+            }
+        }, null, this);;
+
+
         this.anims.create({ key: 'idle', frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 0 }), frameRate: 5, repeat: -1 });
         this.anims.create({ key: 'run', frames: this.anims.generateFrameNumbers('player_run', { start: 0, end: 1 }), frameRate: 6, repeat: -1 });
         this.anims.create({ key: 'jump', frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 0 }), frameRate: 5 });
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('player_fall', { start: 0, end: 0 }), frameRate: 5 });
         this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 0 }), frameRate: 5 });
+        this.anims.create({ key: 'power_idle', frames: this.anims.generateFrameNumbers('player_power_idle', { start: 0, end: 0 }), frameRate: 5, repeat: -1 });
+        this.anims.create({ key: 'power_run', frames: this.anims.generateFrameNumbers('player_power_run', { start: 0, end: 1 }), frameRate: 6, repeat: -1 });
+        this.anims.create({ key: 'power_jump', frames: this.anims.generateFrameNumbers('player_power_jump', { start: 0, end: 0 }), frameRate: 5 });
+        this.anims.create({ key: 'power_fall', frames: this.anims.generateFrameNumbers('player_power_fall', { start: 0, end: 0 }), frameRate: 5 });
+        this.anims.create({ key: 'power_death', frames: this.anims.generateFrameNumbers('player_power_death', { start: 0, end: 0 }), frameRate: 5 });
+
+        this.anims.create({
+            key: 'enemy_idle',
+            frames: [...Array(6).keys()].map(i => ({ key: 'enemy_idle_' + i })),
+            frameRate: 8,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'enemy_die',
+            frames: [...Array(15).keys()].map(i => ({
+                key: 'enemy_die_' + i
+            })),
+            frameRate: 12,
+            repeat: 0
+        });
+
+        this.anims.create({
+            key: 'power_run_extendido',
+            frames: [
+                { key: 'player_power_run', frame: 0 },
+                { key: 'player_power_run', frame: 1 },
+                { key: 'PowerRun1' },
+                { key: 'PowerRun2' }
+            ],
+            frameRate: 8,
+            repeat: -1
+        });
+
+                // === CRIAR INIMIGOS ===
+                this.inimigos = this.physics.add.group();
+        
+                const posicoesInimigos = [
+                [760, 500],
+                [1200, 500],
+                [2070, 460],
+                [2500, 500],
+                [3000, 550],
+                [3600, 860],
+                [4200, 390],
+                [5000, 360],
+                [5800, 340],
+                [6400, 300]
+            ];
+        
+            posicoesInimigos.forEach(([x, y]) => {
+                const inimigo = new Enemy(this, x, y);
+                this.inimigos.add(inimigo);
+            });
+        
+        
+                // === COLISÕES DOS INIMIGOS ===
+                this.physics.add.collider(this.inimigos, this.chao);
+                this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
+        
+                this.physics.add.overlap(this.player, this.inimigos, (player, inimigo) => {
+                    const playerBounds = player.getBounds();
+                    const enemyBounds = inimigo.getBounds();
+        
+                    const isFalling = player.body.velocity.y > 0;
+                    const isOnTop = playerBounds.bottom < enemyBounds.top + 10;
+        
+                    if (isFalling && isOnTop) {
+                        inimigo.die();
+                       // this.adicionarPontos(100);  // Por matar inimigo
+                        player.setVelocityY(-200);
+                    } else if (!inimigo.isDead) {
+                        this.vidas -= 1;
+                        this.vidasText.setText('x ' + this.vidas);
+                        if (this.vidas <= 0) {
+                            this.perderVida();
+                        } else {
+                            this.respawnJogador();
+                        }
+                    }
+                });
+
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
@@ -261,34 +407,56 @@ export class Nivel2 extends Phaser.Scene {
         if (this.cursors.left.isDown) {
             this.player.setVelocityX(-velocidadeAtual);
             this.player.setFlipX(true);
-            if (noChao) this.player.anims.play('run', true);
+            if (noChao) this.player.anims.play(this.temPoder ? 'power_run_extendido' : 'run', true);
         } else if (this.cursors.right.isDown) {
             this.player.setVelocityX(velocidadeAtual);
             this.player.setFlipX(false);
-            if (noChao) this.player.anims.play('run', true);
+            if (noChao) this.player.anims.play(this.temPoder ? 'power_run_extendido' : 'run', true);
         } else {
             this.player.setVelocityX(0);
-            if (noChao) this.player.anims.play('idle', true);
+            if (noChao) this.player.anims.play(this.temPoder ? 'power_idle' : 'idle', true);
         }
 
         if (this.cursors.up.isDown && noChao) {
             this.player.setVelocityY(-330);
-            this.player.anims.play('jump');
+            this.player.anims.play(this.temPoder ? 'power_jump' : 'jump');
         }
 
         if (!noChao && this.player.body.velocity.y > 0) {
-            this.player.anims.play('fall', true);
+            this.player.anims.play(this.temPoder ? 'power_fall' : 'fall', true);
         }
 
         if (this.player.y > 720 && !this.isDead) {
             this.perderVida();
         }
+
+        if (Phaser.Input.Keyboard.JustDown(this.teclaAtaque)) {
+            this.atacar();
+        }
+
+        if (this.inimigos) {
+            this.inimigos.children.iterate(inimigo => {
+                if (inimigo && inimigo.update) {
+                    inimigo.update(this.player);
+                }
+            });
+        }
+
     }
 
     perderVida() {
         this.vidas--;
+        this.temPoder = false; // REMOVE O POWER UP AO MORRER
         if (this.vidas >= 0) this.vidasText.setText('x ' + this.vidas);
         if (this.vidas > 0) {
+
+        if (!this.powerUpTroca || !this.powerUpTroca.active) {
+            this.powerUpTroca = this.physics.add.staticImage(1750, 380, 'head').setScale(0.5).refreshBody();
+            this.physics.add.overlap(this.player, this.powerUpTroca, () => {
+                this.temPoder = true;
+                this.powerUpTroca.destroy();
+            });
+        }    
             this.respawnJogador();
         } else if (!this.gameOverShown) {
             this.isDead = true;
@@ -308,10 +476,75 @@ export class Nivel2 extends Phaser.Scene {
         const y = this.checkpointAtivado ? this.checkpointY : 200;
         this.player.setPosition(x, y);
         this.player.clearTint();
+        this.temPoder = false; // <-- opcional aqui também
+
     }
 
     adicionarPontos(valor) {
         this.pontuacao += valor;
         this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
     }
+
+atacar() {
+    if (!this.temPoder) return;
+
+    const direcao = this.player.flipX ? -1 : 1;
+    const startX = this.player.x + direcao * 40;
+    const startY = this.player.y;
+
+    let contador = 0;
+    const maxAtaques = 3;
+    const intervalo = 100; // ms entre cada ataque (ajusta conforme necessário)
+
+    const timer = this.time.addEvent({
+        delay: intervalo,
+        repeat: maxAtaques - 1,
+        callback: () => {
+            const ataque = this.physics.add.sprite(
+                startX + contador * direcao * 30, // mais à frente a cada repetição
+                startY,
+                'slash'
+            );
+
+            ataque.setScale(0.10);
+            ataque.setVelocityX(direcao * 400);
+            ataque.body.allowGravity = false;
+            ataque.setFlipX(direcao === -1);
+            ataque.setSize(40, 40).setOffset(0, 0);
+
+            this.ataques.add(ataque);
+
+            // Gira para dar efeito visual
+            this.tweens.add({
+                targets: ataque,
+                angle: 360,
+                duration: 500,
+                repeat: -1
+            });
+
+            // Auto destruir
+            this.time.delayedCall(1000, () => {
+                if (ataque && ataque.active) ataque.destroy();
+            });
+
+            contador++;
+        }
+    });
+}
+
+
+
+
+    die() {
+        if (this.isDead) return;
+
+        this.isDead = true;
+        this.setVelocity(0);
+        this.play('enemy_die');
+        this.once('animationcomplete', () => {
+            this.destroy();
+        });
+    }
+
+
 }
