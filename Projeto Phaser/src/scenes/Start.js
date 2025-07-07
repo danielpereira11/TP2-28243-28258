@@ -49,6 +49,7 @@ export class Start extends Phaser.Scene {
 
         this.cameras.main.setBounds(0, 0, 8000, 720);
         this.physics.world.setBounds(0, 0, 8000, 820);
+        this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         const groundY = 650;
         const groundTexture = this.textures.get('ground');
@@ -197,14 +198,28 @@ export class Start extends Phaser.Scene {
         // === CRIAR INIMIGOS ===
         this.inimigos = this.physics.add.group();
 
-        const inimigo1 = new Enemy(this, 800, 500);
-        const inimigo2 = new Enemy(this, 1200, 500);
+        const posicoesInimigos = [
+        [660, 500],
+        [1200, 500],
+        [2070, 460],
+        [2500, 500],
+        [3000, 550],
+        [3600, 860],
+        [4200, 390],
+        [5000, 360],
+        [5800, 340],
+        [6400, 300]
+    ];
 
-        this.inimigos.add(inimigo1);
-        this.inimigos.add(inimigo2);
+    posicoesInimigos.forEach(([x, y]) => {
+        const inimigo = new Enemy(this, x, y);
+        this.inimigos.add(inimigo);
+    });
+
 
         // === COLISÕES DOS INIMIGOS ===
         this.physics.add.collider(this.inimigos, this.chao);
+        this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
 
         this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
             const playerBounds = player.getBounds();
@@ -215,6 +230,7 @@ export class Start extends Phaser.Scene {
 
             if (isFalling && isOnTop) {
                 inimigo.die();
+               // this.adicionarPontos(100);  // Por matar inimigo
                 player.setVelocityY(-200);
             } else if (!inimigo.isDead) {
                 this.vidas -= 1;
@@ -266,11 +282,19 @@ export class Start extends Phaser.Scene {
         }).setScrollFactor(0);
 
         this.tempoRestante = 300;
+        this.pontuacao = 0;
         this.tempoText = this.add.text(970, 40, 'Tempo: ' + this.tempoRestante, {
             fontSize: '32px',
             fill: '#ffffff',
             fontFamily: 'Arial'
         }).setScrollFactor(0);
+        this.pontuacaoText = this.add.text(750, 40, 'Pontos: ' + this.pontuacao, {
+        fontSize: '32px',
+        fill: '#ffffff',
+        fontFamily: 'Arial'
+    }).setScrollFactor(0);
+    
+
     
     }
 
@@ -282,13 +306,15 @@ export class Start extends Phaser.Scene {
         if (!this.player || !this.cursors) return;
 
         const noChao = this.player.body.blocked.down;
+        const isRunning = this.shiftKey.isDown;
+        const speed = isRunning ? 290 : 160;
 
         if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-160);
+            this.player.setVelocityX(-speed);
             this.player.setFlipX(true);
             if (noChao) this.player.anims.play('run', true);
         } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(460);
+            this.player.setVelocityX(speed);
             this.player.setFlipX(false);
             if (noChao) this.player.anims.play('run', true);
         } else {
@@ -316,7 +342,6 @@ export class Start extends Phaser.Scene {
                 }
             });
         }
-
     }
 
     perderVida() {
@@ -359,4 +384,10 @@ export class Start extends Phaser.Scene {
         this.player.setPosition(x, y);
         this.player.clearTint();
     }
+
+        adicionarPontos(valor) {
+        this.pontuacao += valor;
+        this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
+    }
+
 }
