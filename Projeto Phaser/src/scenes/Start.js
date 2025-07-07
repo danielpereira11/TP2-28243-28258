@@ -431,6 +431,7 @@ const intervalo = this.time.addEvent({
     // Transição para o próximo nível após 3 segundos
     this.time.delayedCall(tempoBonus * 50 + 1000, () => {
         this.registry.set('pontos', this.pontuacao);
+        this.registry.set('vidas', this.vidas);
         this.scene.start('Nivel2');
     });
 }

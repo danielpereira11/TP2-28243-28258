@@ -48,7 +48,7 @@ export class Nivel2 extends Phaser.Scene {
     }
 
     create() {
-        this.vidas = 3;
+        this.vidas = this.registry.get('vidas') || 3;
         this.temPoder = false;//saber se o jogador tem power
         this.ataques = this.physics.add.group({
             allowGravity: false,
