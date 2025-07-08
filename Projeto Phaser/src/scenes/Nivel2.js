@@ -18,11 +18,13 @@ export class Nivel2 extends Phaser.Scene {
         this.load.image('checkpoint', 'assets/HUD/checkpoint.png');
         this.load.image('PowerRun1', 'assets/Power/PowerRun1.png');
         this.load.image('PowerRun2', 'assets/Power/PowerRun2.png');
-        this.load.image('slash', 'assets/Power/ataque.png');
+        
         this.load.image('head', 'assets/Power/head.png');
+        
+        
 
 
-
+        this.load.spritesheet('slash', 'assets/Power/ataque.png' , { frameWidth: 496, frameHeight: 496 });
         this.load.spritesheet('player_idle', 'assets/Personagem/Idle.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_run', 'assets/Personagem/Run.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_jump', 'assets/Personagem/Jump.png', { frameWidth: 80, frameHeight: 110 });
@@ -50,10 +52,10 @@ export class Nivel2 extends Phaser.Scene {
     create() {
         this.vidas = this.registry.get('vidas') || 3;
         this.temPoder = false;//saber se o jogador tem power
-        this.ataques = this.physics.add.group({
-            allowGravity: false,
-            runChildUpdate: true
-        });
+        this.ataques = this.physics.add.group({allowGravity: false});
+        this.ataquesIndependentes = [];
+
+
 
         this.teclaAtaque = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z); // tecla Z
 
@@ -192,16 +194,16 @@ export class Nivel2 extends Phaser.Scene {
         }, null, this);
 
         this.physics.add.collider(this.inimigos, this.chao); // inimigo com chão
-        this.physics.add.overlap(this.ataques, this.inimigos, (ataque, inimigo) => {
+       this.physics.add.overlap(this.ataques, this.inimigos, (ataque, inimigo) => {
             ataque.destroy();
 
             if(!inimigo.isDead && typeof inimigo.die === 'function') {
                 inimigo.die();
                 this.adicionarPontos(100); // opcional
-            }
+            } 
         }, null, this);;
 
-
+        this.anims.create({key: 'ataque_anim',frames: this.anims.generateFrameNumbers('slash', { start: 0, end: 3 }),frameRate: 10,repeat: 3});
         this.anims.create({ key: 'idle', frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 0 }), frameRate: 5, repeat: -1 });
         this.anims.create({ key: 'run', frames: this.anims.generateFrameNumbers('player_run', { start: 0, end: 1 }), frameRate: 6, repeat: -1 });
         this.anims.create({ key: 'jump', frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 0 }), frameRate: 5 });
@@ -435,6 +437,29 @@ export class Nivel2 extends Phaser.Scene {
                     inimigo.update(this.player);
                 }
             });
+
+            this.ataquesIndependentes.forEach((slash, index) => {
+    slash.x += slash.direcao * 3;
+
+    this.inimigos.children.iterate(inimigo => {
+        if (inimigo && !inimigo.isDead && slash.getBounds && inimigo.getBounds) {
+            const colisao = Phaser.Geom.Intersects.RectangleToRectangle(
+                slash.getBounds(),
+                inimigo.getBounds()
+            );
+
+            if (colisao) {
+                // Matar inimigo
+                inimigo.die();
+                this.adicionarPontos(250);
+
+                // Destruir slash
+                this.ataquesIndependentes.splice(index, 1);
+                slash.destroy();
+            }
+        }
+    });
+});
         }
 
     }
@@ -484,62 +509,36 @@ atacar() {
     if (!this.temPoder) return;
 
     const direcao = this.player.flipX ? -1 : 1;
-    const startX = this.player.x + direcao * 40;
-    const startY = this.player.y;
 
-    let contador = 0;
-    const maxAtaques = 3;
-    const intervalo = 100; // ms entre cada ataque (ajusta conforme necessário)
+    const slash = this.add.sprite(
+        this.player.x + direcao * 60,
+        this.player.y + 10,
+        'slash'
+    );
 
-    const timer = this.time.addEvent({
-        delay: intervalo,
-        repeat: maxAtaques - 1,
-        callback: () => {
-            const ataque = this.physics.add.sprite(
-                startX + contador * direcao * 30, // mais à frente a cada repetição
-                startY,
-                'slash'
-            );
+    slash.setScale(0.2);
+    //slash.setSize(150, 150).setOffset(80, 80);
+    slash.setFlipX(direcao === -1);
+    slash.direcao = direcao;
 
-            ataque.setScale(0.10);
-            ataque.setVelocityX(direcao * 400);
-            ataque.body.allowGravity = false;
-            ataque.setFlipX(direcao === -1);
-            ataque.setSize(40, 40).setOffset(0, 0);
+    slash.anims.play('ataque_anim');
+    this.ataquesIndependentes.push(slash);
 
-            this.ataques.add(ataque);
-
-            // Gira para dar efeito visual
-            this.tweens.add({
-                targets: ataque,
-                angle: 360,
-                duration: 500,
-                repeat: -1
-            });
-
-            // Auto destruir
-            this.time.delayedCall(1000, () => {
-                if (ataque && ataque.active) ataque.destroy();
-            });
-
-            contador++;
-        }
+    // Auto destruir após 1 segundo
+    this.time.delayedCall(1000, () => {
+        const index = this.ataquesIndependentes.indexOf(slash);
+        if (index !== -1) this.ataquesIndependentes.splice(index, 1);
+        slash.destroy();
     });
 }
 
 
 
 
-    die() {
-        if (this.isDead) return;
 
-        this.isDead = true;
-        this.setVelocity(0);
-        this.play('enemy_die');
-        this.once('animationcomplete', () => {
-            this.destroy();
-        });
-    }
+
+
+   //
 
 
 }
