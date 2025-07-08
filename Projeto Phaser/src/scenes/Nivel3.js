@@ -1,3 +1,4 @@
+import Enemy from '../Enemy.js';
 export class Nivel3 extends Phaser.Scene {
 
     constructor() {
@@ -21,10 +22,29 @@ export class Nivel3 extends Phaser.Scene {
         this.load.spritesheet('player_jump', 'assets/Personagem/Jump.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_fall', 'assets/Personagem/Fall.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_death', 'assets/Personagem/Death.png', { frameWidth: 80, frameHeight: 110 });
-    }
+
+        this.load.spritesheet('bossParado', 'assets/Boss/BossParado.png', {
+            frameWidth: 204,
+            frameHeight: 128
+        });
+        this.load.spritesheet('bossDano', 'assets/Boss/BossDano.png', {
+            frameWidth: 128,
+            frameHeight: 128
+        });
+
+        for (let i = 0; i <= 5; i++) {
+            this.load.image('enemy_idle_' + i, 'assets/inimigo/Idle/0_Necromancer_of_the_Shadow_Idle_00' + i + '.png');
+        }
+
+        for (let i = 0; i <= 14; i++) {
+            const num = i.toString().padStart(3, '0');
+            this.load.image('enemy_die_' + i, 'assets/inimigo/Dying/0_Necromancer_of_the_Shadow_Dying_' + num + '.png');
+        }
+}
+
 
     create() {
-        this.vidas = 3;
+        this.vidas = this.registry.get('vidas') || 3;
         this.isDead = false;
         this.gameOverShown = false;
         this.checkpointAtivado = false;
@@ -113,8 +133,38 @@ for (let i = 0; i < numBlocks; i++) {
         
         this.adicionarPlataformaOscilante(6100, 470, 'horizontal', 200, 2000);
 
-        this.player = this.physics.add.sprite(7500, 200, 'player_idle').setScale(0.8);
+        this.player = this.physics.add.sprite(8900, 200, 'player_idle').setScale(0.8);
         this.player.setCollideWorldBounds(true);
+
+//this.load.image('bossTest', 'assets/Personagem/Idle.png'); // qualquer imagem que exista
+//this.boss = this.physics.add.image(8900, 400, 'bossTest');
+//this.cameras.main.startFollow(this.boss);
+
+ 
+
+
+
+        this.inimigos = this.physics.add.group();
+
+        const posicoesInimigos = [
+            [760, 500],
+            [1200, 500],
+            [2070, 460],
+            [2500, 500],
+            [3000, 550],
+            [3600, 860],
+            [4200, 390],
+            [5000, 360],
+            [5800, 340],
+            [6400, 300]
+        ];
+
+        posicoesInimigos.forEach(([x, y]) => {
+            const inimigo = new Enemy(this, x, y);
+            this.inimigos.add(inimigo);
+        });
+
+
 
         this.checkpoint = this.physics.add.staticImage(1000, 615, 'checkpoint').setScale(0.015).refreshBody();
         this.physics.add.overlap(this.player, this.checkpoint, () => {
@@ -137,11 +187,45 @@ for (let i = 0; i < numBlocks; i++) {
             }
         }, null, this);
 
+        this.physics.add.collider(this.inimigos, this.chao);
+        this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
+
+        this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
+            if (player.body.touching.down && inimigo.body.touching.up && !inimigo.isDead) {
+                inimigo.die(); // mata o inimigo se o jogador cair em cima
+                this.adicionarPontos?.(250); // só se tiveres sistema de pontuação
+                player.setVelocityY(-250); // salto de "ricochete"
+            } else if (!inimigo.isDead) {
+                this.vidas--;
+                this.vidasText.setText('x ' + this.vidas);
+                if (this.vidas <= 0) {
+                    this.perderVida();
+                } else {
+                    this.respawnJogador();
+                }
+            }
+        });
+
+
+
         this.anims.create({ key: 'idle', frames: this.anims.generateFrameNumbers('player_idle', { start: 0, end: 0 }), frameRate: 5, repeat: -1 });
         this.anims.create({ key: 'run', frames: this.anims.generateFrameNumbers('player_run', { start: 0, end: 1 }), frameRate: 6, repeat: -1 });
         this.anims.create({ key: 'jump', frames: this.anims.generateFrameNumbers('player_jump', { start: 0, end: 0 }), frameRate: 5 });
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('player_fall', { start: 0, end: 0 }), frameRate: 5 });
         this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 0 }), frameRate: 5 });
+
+        this.anims.create({
+        key: 'boss_idle',
+        frames: this.anims.generateFrameNumbers('bossParado', { start: 0, end: 9 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.boss = this.physics.add.sprite(9000, 400, 'bossParado');
+    this.boss.setScale(2);
+    this.boss.play('boss_idle');
+
+    this.physics.add.collider(this.boss, this.chao);
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
@@ -254,6 +338,15 @@ for (let i = 0; i < numBlocks; i++) {
         if (this.player.y > 720 && !this.isDead) {
             this.perderVida();
         }
+
+        if (this.inimigos) {
+            this.inimigos.children.iterate(inimigo => {
+                if (inimigo && inimigo.update) {
+                    inimigo.update(this.player);
+                }
+            });
+        }
+
     }
 
     perderVida() {
