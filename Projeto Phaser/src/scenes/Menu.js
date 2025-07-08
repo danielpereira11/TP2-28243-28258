@@ -46,7 +46,7 @@ export class Menu extends Phaser.Scene {
         const menuOptions = [
             { label: t.start, action: () => this.scene.start('Nivel3') },
             { label: t.settings, action: () => this.scene.start('Settings') },
-            { label: t.instructions, action: () => window.open('https://teu-site.com/instrucoes', '_blank') },
+            { label: t.instructions, action: () => this.scene.start('Instrucoes')},
             { label: t.credits, action: () => this.scene.start('Credits') },
         ];
 

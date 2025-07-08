@@ -134,6 +134,10 @@ for (let i = 0; i < numBlocks; i++) {
         this.adicionarPlataformaOscilante(6100, 470, 'horizontal', 200, 2000);
 
         this.player = this.physics.add.sprite(8900, 200, 'player_idle').setScale(0.8);
+        this.vidas = this.registry.get('vidas') || 3;
+this.tempoRestante = 300;
+this.pontuacao = this.registry.get('pontos') || 0;
+
         this.player.setCollideWorldBounds(true);
 
 //this.load.image('bossTest', 'assets/Personagem/Idle.png'); // qualquer imagem que exista
@@ -231,9 +235,40 @@ for (let i = 0; i < numBlocks; i++) {
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
         this.headIcon = this.add.image(1200, 30, 'vida').setScrollFactor(0).setScale(0.05).setOrigin(1, 0);
+
         this.vidasText = this.add.text(1210, 40, 'x ' + this.vidas, {
-            fontSize: '32px', fill: '#ffffff', fontFamily: 'Arial'
+            fontSize: '32px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
         }).setScrollFactor(0);
+
+        this.tempoText = this.add.text(970, 40, 'Tempo: ' + this.tempoRestante, {
+            fontSize: '32px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setScrollFactor(0);
+
+        this.pontuacaoText = this.add.text(750, 40, 'Pontos: ' + this.pontuacao, {
+            fontSize: '32px',
+            fill: '#ffffff',
+            fontFamily: 'Arial'
+        }).setScrollFactor(0);
+
+        this.time.addEvent({
+        delay: 1000,
+        callback: () => {
+            if (!this.isDead) {
+                this.tempoRestante--;
+                this.tempoText.setText('Tempo: ' + Math.max(this.tempoRestante, 0));
+
+                if (this.tempoRestante <= 0) {
+                    this.perderVida();
+                }
+            }
+        },
+        loop: true
+    });
+
     }
 
     adicionarPlataformaOscilante(x, y, tipo = 'horizontal', distancia = 300, tempo = 2000, textura = 'ground') {
@@ -362,6 +397,8 @@ for (let i = 0; i < numBlocks; i++) {
             this.add.text(this.cameras.main.scrollX + 640, 300, 'GAME OVER', {
                 fontSize: '64px', fill: '#ff0000', fontFamily: 'Arial', stroke: '#000', strokeThickness: 6
             }).setOrigin(0.5);
+            this.registry.set('pontos', this.pontuacao);
+            this.registry.set('vidas', this.vidas);
             this.time.delayedCall(2000, () => this.scene.start('Menu'));
         }
     }
@@ -373,4 +410,10 @@ for (let i = 0; i < numBlocks; i++) {
         this.player.setPosition(x, y);
         this.player.clearTint();
     }
+
+    adicionarPontos(valor) {
+    this.pontuacao += valor;
+    this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
+}
+
 }

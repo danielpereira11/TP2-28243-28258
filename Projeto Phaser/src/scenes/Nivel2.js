@@ -247,16 +247,22 @@ export class Nivel2 extends Phaser.Scene {
                 this.inimigos = this.physics.add.group();
         
                 const posicoesInimigos = [
-                [760, 500],
-                [1200, 500],
-                [2070, 460],
-                [2500, 500],
-                [3000, 550],
-                [3600, 860],
-                [4200, 390],
-                [5000, 360],
-                [5800, 340],
-                [6400, 300]
+                [680, 520],
+                [1050, 490],
+                [1380, 460],
+                [2275, 520],
+                [2580, 450],
+                [2320, 380],
+                [2640, 310],
+                [2970, 240],
+                [3040, 240],
+                [12610, 210],
+                [12680, 210],
+                [13000, 210],
+                [12610, 210],
+                [12680, 510],
+                    
+
             ];
         
             posicoesInimigos.forEach(([x, y]) => {
@@ -486,6 +492,8 @@ export class Nivel2 extends Phaser.Scene {
             this.add.text(this.cameras.main.scrollX + 640, 300, 'GAME OVER', {
                 fontSize: '64px', fill: '#ff0000', fontFamily: 'Arial', stroke: '#000', strokeThickness: 6
             }).setOrigin(0.5);
+            this.registry.set('pontos', this.pontuacao);
+            this.registry.set('vidas', this.vidas);
             this.time.delayedCall(2000, () => this.scene.start('Menu'));
         }
     }
