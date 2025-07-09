@@ -54,6 +54,7 @@ export class Nivel2 extends Phaser.Scene {
         this.temPoder = false;//saber se o jogador tem power
         this.ataques = this.physics.add.group({allowGravity: false});
         this.ataquesIndependentes = [];
+        
 
 
 
@@ -82,8 +83,7 @@ export class Nivel2 extends Phaser.Scene {
         // Criar inimigos
         this.inimigos = [];
 
-        this.inimigos.push(new Enemy(this, 1000, 630));
-        this.inimigos.push(new Enemy(this, 2000, 630));
+        
         // Adiciona mais se quiseres
 
         // Colisão inimigos com chão
@@ -162,7 +162,7 @@ export class Nivel2 extends Phaser.Scene {
 
 
 
-        this.player = this.physics.add.sprite(100, 200, 'player_idle').setScale(0.8);
+        this.player = this.physics.add.sprite(14000, 200, 'player_idle').setScale(0.8);
         this.powerUpTroca = this.physics.add.staticImage(1750, 380, 'head').setScale(0.5).refreshBody();
 
         this.physics.add.overlap(this.player, this.powerUpTroca, () => {
@@ -249,17 +249,33 @@ export class Nivel2 extends Phaser.Scene {
                 const posicoesInimigos = [
                 [680, 520],
                 [1050, 490],
-                [1380, 460],
+                [1335, 360],
                 [2275, 520],
                 [2580, 450],
                 [2320, 380],
                 [2640, 310],
                 [2970, 240],
                 [3040, 240],
-                [12610, 210],
-                [12680, 210],
-                [13000, 210],
-                [12610, 210],
+                [4200, 240],
+[4200, 240],
+[4340, 240],
+[4480, 240],
+[4620, 240],
+[4760, 240],
+[4800, 240],
+
+[4940, 240],
+[5040, 240],
+[5200, 240],
+[5420, 240],
+[5760, 240],
+[6000, 240],
+[6600, 240],
+
+                [11000, 210],
+                [11180, 210],
+                [10400, 210],
+                [10000, 210],
                 [12680, 510],
                     
 
@@ -431,7 +447,8 @@ export class Nivel2 extends Phaser.Scene {
 
         if (this.player.y > 720 && !this.isDead) {
             this.perderVida();
-        }
+        
+    }
 
         if (Phaser.Input.Keyboard.JustDown(this.teclaAtaque)) {
             this.atacar();
@@ -539,14 +556,5 @@ atacar() {
         slash.destroy();
     });
 }
-
-
-
-
-
-
-
-   //
-
 
 }
