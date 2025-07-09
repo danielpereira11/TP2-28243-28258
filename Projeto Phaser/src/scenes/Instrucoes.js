@@ -18,8 +18,10 @@ export class Instrucoes extends Phaser.Scene {
 
         this.add.text(150, 180, 
 `➡ Usa as teclas [←] e [→] para te moveres
-⬆ Usa a tecla [ESPAÇO] para saltar
-💀 Evita inimigos ou salta sobre eles para os eliminar
+➡ Usa a tecla [⬆] para saltar
+➡ Usa a tecla [SHIFTESQ] para correr enquanto andas
+➡ Usa a tecla [z] para atacar 
+💀 Evita inimigos ou salta sobre eles/ ataca para os eliminar
 ❤️ Começas com 3 vidas
 🕐 O tempo conta! Se chegar a 0, perdes 1 vida
 🎯 Objetivo: chegar ao final do nível com o máximo de pontos`, 

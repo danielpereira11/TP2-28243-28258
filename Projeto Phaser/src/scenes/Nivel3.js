@@ -23,14 +23,10 @@ export class Nivel3 extends Phaser.Scene {
         this.load.spritesheet('player_fall', 'assets/Personagem/Fall.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_death', 'assets/Personagem/Death.png', { frameWidth: 80, frameHeight: 110 });
 
-        this.load.spritesheet('bossParado', 'assets/Boss/BossParado.png', {
-            frameWidth: 204,
-            frameHeight: 128
-        });
-        this.load.spritesheet('bossDano', 'assets/Boss/BossDano.png', {
-            frameWidth: 128,
-            frameHeight: 128
-        });
+        this.load.spritesheet('bossParado', 'assets/Boss/BossParado.png', {frameWidth: 1600, frameHeight: 1000});
+        this.load.spritesheet('bossAndar', 'assets/Boss/BossAndar.png', {frameWidth: 1600,frameHeight: 1000});
+        this.load.spritesheet('bossAttack', 'assets/Boss/BossAttack.png', {frameWidth: 1600,frameHeight: 1000});      
+        this.load.spritesheet('bossSaltar', 'assets/Boss/BossSaltar.png', {frameWidth: 1600,frameHeight: 1000});
 
         for (let i = 0; i <= 5; i++) {
             this.load.image('enemy_idle_' + i, 'assets/inimigo/Idle/0_Necromancer_of_the_Shadow_Idle_00' + i + '.png');
@@ -133,16 +129,13 @@ for (let i = 0; i < numBlocks; i++) {
         
         this.adicionarPlataformaOscilante(6100, 470, 'horizontal', 200, 2000);
 
-        this.player = this.physics.add.sprite(8900, 200, 'player_idle').setScale(0.8);
+        this.player = this.physics.add.sprite(8800, 200, 'player_idle').setScale(0.8);
         this.vidas = this.registry.get('vidas') || 3;
 this.tempoRestante = 300;
 this.pontuacao = this.registry.get('pontos') || 0;
 
         this.player.setCollideWorldBounds(true);
 
-//this.load.image('bossTest', 'assets/Personagem/Idle.png'); // qualquer imagem que exista
-//this.boss = this.physics.add.image(8900, 400, 'bossTest');
-//this.cameras.main.startFollow(this.boss);
 
  
 
@@ -218,18 +211,34 @@ this.pontuacao = this.registry.get('pontos') || 0;
         this.anims.create({ key: 'fall', frames: this.anims.generateFrameNumbers('player_fall', { start: 0, end: 0 }), frameRate: 5 });
         this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 0 }), frameRate: 5 });
 
-        this.anims.create({
-        key: 'boss_idle',
-        frames: this.anims.generateFrameNumbers('bossParado', { start: 0, end: 9 }),
-        frameRate: 10,
-        repeat: -1
-    });
+        this.anims.create({key: 'boss_idle',frames: this.anims.generateFrameNumbers('bossParado', { start: 0, end: 9 }),frameRate: 10,repeat: -1});
+        this.anims.create({key: 'boss_walk',frames: this.anims.generateFrameNumbers('bossAndar', { start: 0, end: 9 }),frameRate: 10,repeat: -1});
+        this.anims.create({key: 'boss_saltar',frames: this.anims.generateFrameNumbers('bossSaltar', { start: 0, end: 9 }),frameRate: 10,repeat: -1});
 
-    this.boss = this.physics.add.sprite(9000, 400, 'bossParado');
-    this.boss.setScale(2);
+
+
+    this.boss = this.physics.add.sprite(10000, 400, 'bossParado');
+    this.boss.setScale(0.5);
+    this.bossPodeSaltar = true;
+
+this.time.addEvent({
+    delay: 4000, // milissegundos (4 segundos)
+    loop: true,
+    callback: () => {
+        if (this.boss.body.blocked.down && this.bossPodeSaltar) {
+            this.boss.setVelocityY(-400); // força de salto (ajustável)
+        }
+    }
+});
     this.boss.play('boss_idle');
+    this.bossSpeed = 80;
+    this.boss.body.setSize(500, 485).setOffset(650, 265);
 
     this.physics.add.collider(this.boss, this.chao);
+
+    this.time.delayedCall(2000, () => {
+    this.physics.add.collider(this.player, this.boss, this.colisaoComBoss, null, this);
+});
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
@@ -322,9 +331,17 @@ this.pontuacao = this.registry.get('pontos') || 0;
                 platform.destroy();
                 this.addFallingPlatform(originalX, originalY);
             });
+            
         }
+        
     }
-
+colisaoComBoss(player, boss) {
+    if (!this.isDead) {
+        this.vidas = 0;
+        this.vidasText.setText('x ' + this.vidas);
+        this.perderVida();
+    }
+}
     update() {
         if (this.clouds) this.clouds.tilePositionX += 0.3;
         if (!this.player || !this.cursors) return;
@@ -373,6 +390,39 @@ this.pontuacao = this.registry.get('pontos') || 0;
         if (this.player.y > 720 && !this.isDead) {
             this.perderVida();
         }
+
+        if (this.boss && this.player && !this.isDead) {
+    const distancia = Phaser.Math.Distance.Between(this.boss.x, this.boss.y, this.player.x, this.player.y);
+
+    // 🔼 Se estiver no ar → SALTAR
+    if (!this.boss.body.blocked.down) {
+        if (this.boss.anims.getName() !== 'boss_saltar') {
+            this.boss.anims.play('boss_saltar');
+        }
+    }
+    // 🚶‍♂️ Se estiver no chão e perto → ANDAR
+    else if (distancia < 800) {
+        if (this.player.x < this.boss.x) {
+            this.boss.setVelocityX(-this.bossSpeed);
+            this.boss.setFlipX(true);
+        } else {
+            this.boss.setVelocityX(this.bossSpeed);
+            this.boss.setFlipX(false);
+        }
+
+        if (this.boss.anims.getName() !== 'boss_walk') {
+            this.boss.anims.play('boss_walk');
+        }
+    }
+    // 😴 Se estiver no chão e longe → PARADO
+    else {
+        this.boss.setVelocityX(0);
+        if (this.boss.anims.getName() !== 'boss_idle') {
+            this.boss.anims.play('boss_idle');
+        }
+    }
+}
+
 
         if (this.inimigos) {
             this.inimigos.children.iterate(inimigo => {
