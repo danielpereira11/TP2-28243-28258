@@ -27,6 +27,8 @@ export class Nivel3 extends Phaser.Scene {
         this.load.spritesheet('bossAndar', 'assets/Boss/BossAndar.png', {frameWidth: 1600,frameHeight: 1000});
         this.load.spritesheet('bossAttack', 'assets/Boss/BossAttack.png', {frameWidth: 1600,frameHeight: 1000});      
         this.load.spritesheet('bossSaltar', 'assets/Boss/BossSaltar.png', {frameWidth: 1600,frameHeight: 1000});
+        this.load.spritesheet('bossDano', 'assets/Boss/BossDano.png', {frameWidth: 1600, frameHeight: 1000});
+
 
         for (let i = 0; i <= 5; i++) {
             this.load.image('enemy_idle_' + i, 'assets/inimigo/Idle/0_Necromancer_of_the_Shadow_Idle_00' + i + '.png');
@@ -214,12 +216,15 @@ this.pontuacao = this.registry.get('pontos') || 0;
         this.anims.create({key: 'boss_idle',frames: this.anims.generateFrameNumbers('bossParado', { start: 0, end: 9 }),frameRate: 10,repeat: -1});
         this.anims.create({key: 'boss_walk',frames: this.anims.generateFrameNumbers('bossAndar', { start: 0, end: 9 }),frameRate: 10,repeat: -1});
         this.anims.create({key: 'boss_saltar',frames: this.anims.generateFrameNumbers('bossSaltar', { start: 0, end: 9 }),frameRate: 10,repeat: -1});
-
+         this.anims.create({key: 'boss_dano',frames: this.anims.generateFrameNumbers('bossDano', { start: 0, end: 9 }),frameRate: 10, repeat: 0});
 
 
     this.boss = this.physics.add.sprite(10000, 400, 'bossParado');
     this.boss.setScale(0.5);
     this.bossPodeSaltar = true;
+    this.boss.isDead = false;
+    this.boss.vida = 10;
+
 
 this.time.addEvent({
     delay: 4000, // milissegundos (4 segundos)
@@ -239,6 +244,15 @@ this.time.addEvent({
     this.time.delayedCall(2000, () => {
     this.physics.add.collider(this.player, this.boss, this.colisaoComBoss, null, this);
 });
+
+    this.bossMaxVida = 10;
+    this.boss.vida = this.bossMaxVida;
+
+    this.bossHealthBarBg = this.add.rectangle(640, 100, 300, 20, 0x000000).setScrollFactor(0).setVisible(false);
+    this.bossHealthBar = this.add.rectangle(640, 100, 300, 20, 0xff0000).setScrollFactor(0).setVisible(false);
+
+
+
 
         this.cursors = this.input.keyboard.createCursorKeys();
         this.shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
@@ -336,12 +350,37 @@ this.time.addEvent({
         
     }
 colisaoComBoss(player, boss) {
-    if (!this.isDead) {
-        this.vidas = 0;
+    if (player.body.touching.down && boss.body.touching.up && !boss.isDead) {
+        boss.vida--;
+        player.setVelocityY(-250);
+        const percent = boss.vida / this.bossMaxVida;
+        this.bossHealthBar.width = 300 * percent;
+
+        if (boss.vida <= 0) {
+            boss.isDead = true;
+            boss.setVelocityX(0);
+            boss.anims.play('boss_dano');
+
+            boss.once('animationcomplete', (anim, frame) => {
+                if (anim.key === 'boss_dano') {
+                    this.bossHealthBar.setVisible(false);
+                    this.bossHealthBarBg.setVisible(false);
+                    boss.disableBody(true, true);
+                    this.adicionarPontos?.(1000);
+                }
+            });
+        }
+    } else if (!boss.isDead) {
+        this.vidas--;
         this.vidasText.setText('x ' + this.vidas);
-        this.perderVida();
+        if (this.vidas <= 0) {
+            this.perderVida();
+        } else {
+            this.respawnJogador();
+        }
     }
 }
+
     update() {
         if (this.clouds) this.clouds.tilePositionX += 0.3;
         if (!this.player || !this.cursors) return;
@@ -391,8 +430,18 @@ colisaoComBoss(player, boss) {
             this.perderVida();
         }
 
-        if (this.boss && this.player && !this.isDead) {
+        if (this.boss && this.player && !this.isDead && !this.boss.isDead) {
+
     const distancia = Phaser.Math.Distance.Between(this.boss.x, this.boss.y, this.player.x, this.player.y);
+
+        if (!this.boss.isDead && distancia < 600) {
+            this.bossHealthBar.setVisible(true);
+            this.bossHealthBarBg.setVisible(true);
+        } else {
+            this.bossHealthBar.setVisible(false);
+            this.bossHealthBarBg.setVisible(false);
+}  
+
 
     // 🔼 Se estiver no ar → SALTAR
     if (!this.boss.body.blocked.down) {
