@@ -2,11 +2,9 @@ export class Instrucoes extends Phaser.Scene {
     constructor() {
         super({ key: 'Instrucoes' });
     }
-
     preload() {
         this.load.image('fundo', 'assets/Personagem/Idle.png');
     }
-
     create() {
         this.add.image(640, 360, 'fundo').setScale(1.5);
 
@@ -14,8 +12,7 @@ export class Instrucoes extends Phaser.Scene {
             fontSize: '40px',
             fill: '#ffff00',
             fontFamily: 'Arial'
-        });
-
+        })
         this.add.text(150, 180, 
 `➡ Usa as teclas [←] e [→] para te moveres
 ➡ Usa a tecla [⬆] para saltar
@@ -31,7 +28,6 @@ export class Instrucoes extends Phaser.Scene {
             fontFamily: 'Arial',
             lineSpacing: 10
         });
-
         const voltarBtn = this.add.text(550, 500, 'Voltar', {
             fontSize: '32px',
             fill: '#ffcc00',
@@ -42,7 +38,6 @@ export class Instrucoes extends Phaser.Scene {
         voltarBtn.on('pointerover', () => {
             voltarBtn.setStyle({ fill: '#ffff00' });
         });
-
         voltarBtn.on('pointerout', () => {
             voltarBtn.setStyle({ fill: '#ffcc00' });
         });

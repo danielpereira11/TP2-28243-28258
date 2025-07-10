@@ -1,4 +1,3 @@
-
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y) {
         super(scene, x, y, 'enemy_idle_0');
@@ -7,10 +6,10 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
         scene.physics.add.existing(this);
 
         this.scene = scene;
-        this.setScale(0.07); // Mais pequeno
+        this.setScale(0.07); 
         this.setCollideWorldBounds(true);
 
-        // Hitbox ajustada para tocar o chão corretamente
+        
         this.body.setSize(this.width * 0.4, this.height * 0.6);
         this.body.setOffset(210, this.height * 0.2);
 

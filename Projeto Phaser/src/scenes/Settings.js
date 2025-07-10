@@ -17,7 +17,7 @@ export class Settings extends Phaser.Scene {
             fontFamily: 'Arial',
         }).setOrigin(0.5);
 
-        // Controles
+       
         this.add.text(300, 200, t.controls, {
             fontSize: '32px',
             color: '#fff',
@@ -34,7 +34,7 @@ export class Settings extends Phaser.Scene {
             console.log('Alterar controles');
         });
 
-        // Volume
+   
         this.add.text(300, 280, t.volume, {
             fontSize: '32px',
             color: '#fff',
@@ -66,7 +66,7 @@ export class Settings extends Phaser.Scene {
             volumeText.setText(volume.toString());
         });
 
-        // Idioma
+     
         this.add.text(300, 360, t.language, {
             fontSize: '32px',
             color: '#fff',
@@ -85,7 +85,7 @@ export class Settings extends Phaser.Scene {
             this.scene.restart();
         });
 
-        // Botão voltar
+       
         const backBtn = this.add.text(640, 500, t.back, {
             fontSize: '32px',
             color: '#fff',

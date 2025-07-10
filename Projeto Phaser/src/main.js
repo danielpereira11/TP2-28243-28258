@@ -15,7 +15,7 @@ const config = {
     backgroundColor: '#4488aa',
     pixelArt: false,
 
-    scene: [Menu,Nivel2, Nivel3, Start, Settings, Instrucoes],
+    scene: [Menu, Start, Nivel2, Nivel3, Settings, Instrucoes],
 
 
      

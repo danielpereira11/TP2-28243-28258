@@ -191,9 +191,9 @@ this.pontuacao = this.registry.get('pontos') || 0;
 
         this.physics.add.collider(this.player, this.inimigos, (player, inimigo) => {
             if (player.body.touching.down && inimigo.body.touching.up && !inimigo.isDead) {
-                inimigo.die(); // mata o inimigo se o jogador cair em cima
-                this.adicionarPontos?.(250); // só se tiveres sistema de pontuação
-                player.setVelocityY(-250); // salto de "ricochete"
+                inimigo.die(); 
+                this.adicionarPontos?.(250); 
+                player.setVelocityY(-250); 
             } else if (!inimigo.isDead) {
                 this.vidas--;
                 this.vidasText.setText('x ' + this.vidas);
@@ -227,11 +227,11 @@ this.pontuacao = this.registry.get('pontos') || 0;
 
 
 this.time.addEvent({
-    delay: 4000, // milissegundos (4 segundos)
+    delay: 4000, 
     loop: true,
     callback: () => {
         if (this.boss.body.blocked.down && this.bossPodeSaltar) {
-            this.boss.setVelocityY(-400); // força de salto (ajustável)
+            this.boss.setVelocityY(-400); 
         }
     }
 });
@@ -284,9 +284,7 @@ this.time.addEvent({
                 this.tempoRestante--;
                 this.tempoText.setText('Tempo: ' + Math.max(this.tempoRestante, 0));
 
-                if (this.tempoRestante <= 0) {
-                    this.perderVida();
-                }
+           
             }
         },
         loop: true
@@ -367,6 +365,7 @@ colisaoComBoss(player, boss) {
                     this.bossHealthBarBg.setVisible(false);
                     boss.disableBody(true, true);
                     this.adicionarPontos?.(1000);
+                    this.concluirNivel();
                 }
             });
         }
@@ -443,13 +442,13 @@ colisaoComBoss(player, boss) {
 }  
 
 
-    // 🔼 Se estiver no ar → SALTAR
+   
     if (!this.boss.body.blocked.down) {
         if (this.boss.anims.getName() !== 'boss_saltar') {
             this.boss.anims.play('boss_saltar');
         }
     }
-    // 🚶‍♂️ Se estiver no chão e perto → ANDAR
+    
     else if (distancia < 800) {
         if (this.player.x < this.boss.x) {
             this.boss.setVelocityX(-this.bossSpeed);
@@ -463,7 +462,7 @@ colisaoComBoss(player, boss) {
             this.boss.anims.play('boss_walk');
         }
     }
-    // 😴 Se estiver no chão e longe → PARADO
+   
     else {
         this.boss.setVelocityX(0);
         if (this.boss.anims.getName() !== 'boss_idle') {
@@ -513,6 +512,58 @@ colisaoComBoss(player, boss) {
     adicionarPontos(valor) {
     this.pontuacao += valor;
     this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
+}
+concluirNivel() {
+    if (this.isDead) return; 
+
+    this.nivelConcluido = true;
+    this.physics.pause();
+    this.player.setTint(0x00ff00);
+
+    const x = this.cameras.main.midPoint.x;
+    const y = this.cameras.main.midPoint.y;
+
+    
+    this.add.rectangle(x, y, 600, 200, 0x000000, 0.7)
+        .setOrigin(0.5)
+        .setDepth(1000);
+
+ 
+    this.add.text(x, y, `Nível 3 concluido com sucesso
+                             Pontuação Do Nivel: ${this.pontuacao}`, {
+        fontSize: '64px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        stroke: '#ffaa00',
+        strokeThickness: 4
+    }).setOrigin(0.5).setDepth(1001);
+
+    let tempoBonus = this.tempoRestante;
+
+    this.time.addEvent({
+        delay: 50,
+        repeat: tempoBonus - 1,
+        callback: () => {
+            this.adicionarPontos(25);
+            tempoBonus--;
+            this.tempoRestante = tempoBonus;
+            this.tempoText.setText('Tempo: ' + tempoBonus);
+            this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
+        },
+
+    
+        callbackScope: this,
+        onComplete: () => {
+            
+            this.time.delayedCall(1000, () => {
+                
+                this.registry.set('pontos', this.pontuacao);
+                this.registry.set('vidas', this.vidas);
+                
+                this.scene.start('Menu');
+            });
+        }
+    });
 }
 
 }

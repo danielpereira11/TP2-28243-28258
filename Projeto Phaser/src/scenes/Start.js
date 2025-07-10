@@ -13,11 +13,11 @@ export class Start extends Phaser.Scene {
         this.load.image('plataformaE', 'assets/ChaoJogo/PontaPlataformaE.png');
         this.load.image('plataformaD', 'assets/ChaoJogo/PontaPlataformaD.png');
         this.load.image('plataformaAltE', 'assets/ChaoJogo/PontaPlataformaAltE.png');
+        
         this.load.image('plataformaAltD', 'assets/ChaoJogo/PontaPlataformaAltD.png');
         this.load.image('vida', 'assets/HUD/vida.png');
         this.load.image('checkpoint', 'assets/HUD/checkpoint.png');
         this.load.image('powerup_vida', 'assets/HUD/vida.png');
-
 
         this.load.spritesheet('player_idle', 'assets/Personagem/Idle.png', { frameWidth: 80, frameHeight: 110 });
         this.load.spritesheet('player_run', 'assets/Personagem/Run.png', { frameWidth: 80, frameHeight: 110 });
@@ -44,6 +44,8 @@ export class Start extends Phaser.Scene {
         this.checkpointX = 100;
         this.checkpointY = 200;
         this.nivelConcluido = false;
+         this.tempoRestante = 300;
+         this.pontuacao = 0;
 
         this.sky = this.add.tileSprite(640, 360, 1280, 720, 'sky').setScrollFactor(0);
         this.clouds = this.add.tileSprite(640, 200, 1280, 300, 'clouds').setScrollFactor(0);
@@ -115,35 +117,31 @@ export class Start extends Phaser.Scene {
         }
 
         const plataformasFlutuantes = [
-            [550, 630, 'plataformaE'],
-            [620, 630, 'ground'],
-            [690, 630, 'plataformaD'],
+            [550, 630, 'plataformaE'],[620, 630, 'ground'], [690, 630, 'plataformaD'],
 
-            [1500, 600, 'plataformaAltE'],
-            [1570, 600, 'plataformaAltD'],
-            [1700, 550, 'plataformaAltE'],
-            [1770, 550, 'plataformaAltD'],
-            [2900, 630, 'plataformaE'],
-            [2970, 630, 'plataformaD'],
-            [3150, 560, 'plataformaE'],
-            [3220, 560, 'plataformaD'],
-            [2900, 470, 'plataformaE'],
-            [2970, 470, 'plataformaD'],
-            [2660, 380, 'plataformaE'],
-            [2730, 380, 'plataformaD'],
-            [2430, 290, 'plataformaAltE'],
-            [2500, 290, 'plataformaAltD'],
-            [3400, 560, 'plataformaE'],
-            [3470, 560, 'plataformaD'],
-            [5430, 390, 'plataformaAltE'],
-            [5500, 390, 'plataformaAltD'],
-            [5610, 340, 'plataformaAltE'],
-            [5680, 340, 'plataformaAltD'],
-            [5790, 290, 'plataformaAltE'],
-            [5860, 290, 'plataformaAltD'],
-            [6120, 290, 'plataformaAltE'],
-            [6190, 290, 'ground'],
-            [6260, 290, 'plataformaAltD'],
+            [1500, 600, 'plataformaAltE'], [1570, 600, 'plataformaAltD'],
+
+            [1700, 550, 'plataformaAltE'], [1770, 550, 'plataformaAltD'],
+
+            [2900, 630, 'plataformaE'], [2970, 630, 'plataformaD'],
+
+            [3150, 560, 'plataformaE'], [3220, 560, 'plataformaD'],
+
+            [2900, 470, 'plataformaE'], [2970, 470, 'plataformaD'],
+
+            [2660, 380, 'plataformaE'], [2730, 380, 'plataformaD'],
+
+            [2430, 290, 'plataformaAltE'], [2500, 290, 'plataformaAltD'],
+
+            [3400, 560, 'plataformaE'], [3470, 560, 'plataformaD'],
+
+            [5430, 390, 'plataformaAltE'], [5500, 390, 'plataformaAltD'],
+
+            [5610, 340, 'plataformaAltE'], [5680, 340, 'plataformaAltD'],
+
+            [5790, 290, 'plataformaAltE'], [5860, 290, 'plataformaAltD'],
+            
+            [6120, 290, 'plataformaAltE'], [6190, 290, 'ground'], [6260, 290, 'plataformaAltD'],
         ];
 
         for (let [x, y, texture] of plataformasFlutuantes) {
@@ -156,7 +154,6 @@ export class Start extends Phaser.Scene {
         this.player = this.physics.add.sprite(100, 200, 'player_idle').setScale(0.8);
         this.player.setCollideWorldBounds(true);
 
-        // === CHECKPOINT ===
         this.checkpoint = this.physics.add.staticImage(5000, 400, 'checkpoint').setScale(0.015).refreshBody();
 
         this.physics.add.overlap(this.player, this.checkpoint, () => {
@@ -179,7 +176,6 @@ export class Start extends Phaser.Scene {
         this.anims.create({ key: 'death', frames: this.anims.generateFrameNumbers('player_death', { start: 0, end: 0 }), frameRate: 5 });
 
         
-        // === ANIMAÇÕES DOS INIMIGOS ===
         this.anims.create({
             key: 'enemy_idle',
             frames: [...Array(6).keys()].map(i => ({ key: 'enemy_idle_' + i })),
@@ -196,7 +192,6 @@ export class Start extends Phaser.Scene {
             repeat: 0
         });
 
-        // === CRIAR INIMIGOS ===
         this.inimigos = this.physics.add.group();
 
         const posicoesInimigos = [
@@ -218,7 +213,6 @@ export class Start extends Phaser.Scene {
     });
 
 
-        // === COLISÕES DOS INIMIGOS ===
         this.physics.add.collider(this.inimigos, this.chao);
         this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
 
@@ -238,11 +232,9 @@ export class Start extends Phaser.Scene {
     }
 });
 
-        // POWER-UP DE VIDA 
         this.powerUpsVida = this.physics.add.staticGroup();
         this.powerUpsVida.create(2500, 260, 'vida').setScale(0.07).refreshBody();
 
-        // COLISÃO COM POWER-UP
         this.physics.add.overlap(this.player, this.powerUpsVida, (player, powerup) => {
             if (this.vidas < 4) {
                 this.vidas++;
@@ -276,8 +268,8 @@ export class Start extends Phaser.Scene {
             fontFamily: 'Arial'
         }).setScrollFactor(0);
 
-        this.tempoRestante = 300;
-        this.pontuacao = 0;
+        
+        
         this.tempoText = this.add.text(970, 40, 'Tempo: ' + this.tempoRestante, {
             fontSize: '32px',
             fill: '#ffffff',
@@ -294,131 +286,139 @@ export class Start extends Phaser.Scene {
     }
 
     update() {
-        if (this.clouds) {
-            this.clouds.tilePositionX += 0.3;
-        }
+    if (!this.player || !this.cursors) return;
 
-        if (!this.player || !this.cursors) return;
+    if (this.clouds) {
+        this.clouds.tilePositionX += 0.3;
+    }
 
-        const noChao = this.player.body.blocked.down;
-        const isRunning = this.shiftKey.isDown;
-        const speed = isRunning ? 290 : 160;
+    const noChao = this.player.body.blocked.down;
+    const isRunning = this.shiftKey.isDown;
+    const speed = isRunning ? 290 : 160;
 
-        if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-speed);
-            this.player.setFlipX(true);
-            if (noChao) this.player.anims.play('run', true);
-        } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(speed);
-            this.player.setFlipX(false);
-            if (noChao) this.player.anims.play('run', true);
-        } else {
-            this.player.setVelocityX(0);
-            if (noChao) this.player.anims.play('idle', true);
-        }
+    if (this.cursors.left.isDown) {
+        this.player.setVelocityX(-speed);
+        this.player.setFlipX(true);
+        if (noChao) this.player.anims.play('run', true);
+    } else if (this.cursors.right.isDown) {
+        this.player.setVelocityX(speed);
+        this.player.setFlipX(false);
+        if (noChao) this.player.anims.play('run', true);
+    } else {
+        this.player.setVelocityX(0);
+        if (noChao) this.player.anims.play('idle', true);
+    }
 
-        if (this.cursors.up.isDown && noChao) {
-            this.player.setVelocityY(-330);
-            this.player.anims.play('jump');
-        }
+    if (this.cursors.up.isDown && noChao) {
+        this.player.setVelocityY(-330);
+        this.player.anims.play('jump');
+    }
 
-        if (!noChao && this.player.body.velocity.y > 0) {
-            this.player.anims.play('fall', true);
-        }
+    if (!noChao && this.player.body.velocity.y > 0) {
+        this.player.anims.play('fall', true);
+    }
 
-        if (this.player.y > 720 && !this.isDead) {
-            this.perderVida();
-        }
+    if (this.player.y > 720 && !this.isDead) {
+        this.perderVida();
+    }
 
-        if (this.player.x >= 7700 && !this.nivelConcluido) {
+    if (this.player.x >= 7700 && !this.nivelConcluido) {
         this.concluirNivel();
     }
 
-        if (this.inimigos) {
-            this.inimigos.children.iterate(inimigo => {
-                if (inimigo && inimigo.update) {
-                    inimigo.update(this.player);
-                }
-            });
-        }
+    if (this.inimigos) {
+        this.inimigos.children.iterate(inimigo => {
+            if (inimigo && inimigo.update) {
+                inimigo.update(this.player);
+            }
+        });
+    }
+}
+
+
+   perderVida() {
+    this.vidas--;
+    if (this.vidas >= 0) {
+        this.vidasText.setText('x ' + this.vidas);
     }
 
-    perderVida() {
-        this.vidas--;
-        if (this.vidas >= 0) {
-            this.vidasText.setText('x ' + this.vidas);
-        }
+    if (this.vidas > 0) {
+        this.respawnJogador();
+    } else if (!this.gameOverShown) {
+        this.isDead = true;
+        this.gameOverShown = true;
 
-        if (this.vidas > 0) {
-            this.respawnJogador();
-        } else if (!this.gameOverShown) {
-            this.isDead = true;
-            this.gameOverShown = true;
+        
+        this.player.setTint(0xff0000);
+        this.player.anims.play('death');
 
-            this.player.setTint(0xff0000);
-            this.player.anims.play('death');
+        
+        const gameOverText = this.add.text(
+            this.cameras.main.scrollX + 640, 300,
+            'GAME OVER',
+            {
+                fontSize: '64px',
+                fill: '#ff0000',
+                fontFamily: 'Arial',
+                stroke: '#000000',
+                strokeThickness: 6
+            }
+        ).setOrigin(0.5);
 
-            const gameOverText = this.add.text(
-                this.cameras.main.scrollX + 640, 300,
-                'GAME OVER',
-                {
-                    fontSize: '64px',
-                    fill: '#ff0000',
-                    fontFamily: 'Arial',
-                    stroke: '#000000',
-                    strokeThickness: 6
-                }
-            ).setOrigin(0.5);
-
-            this.time.delayedCall(2000, () => {
-                this.scene.start('Menu');
-            });
-        }
+        
+        this.time.delayedCall(2000, () => {
+            this.scene.start('Menu');
+        });
     }
+}
 
-    respawnJogador() {
-        this.player.setVelocity(0, 0);
-        const x = this.checkpointAtivado ? this.checkpointX : 100;
-        const y = this.checkpointAtivado ? this.checkpointY : 200;
-        this.player.setPosition(x, y);
-        this.player.clearTint();
-    }
 
-        adicionarPontos(valor) {
-        this.pontuacao += valor;
-        this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
-    }
+respawnJogador() {
+    this.player.setVelocity(0, 0);
+
+    const x = this.checkpointAtivado ? this.checkpointX : 100;
+    const y = this.checkpointAtivado ? this.checkpointY : 200;
+
+    this.player.setPosition(x, y);
+    this.player.clearTint();
+}
+
+
+adicionarPontos(valor) {
+    this.pontuacao += valor;
+    this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
+}
+
 
 concluirNivel() {
     this.nivelConcluido = true;
     this.physics.pause();
     this.player.setTint(0x00ff00);
 
-    // Coordenadas do centro visível da câmara
     const x = this.cameras.main.midPoint.x;
     const y = this.cameras.main.midPoint.y;
 
-    let tempoBonus = this.tempoRestante;
-this.tempoRestante = 0;
-
-const intervalo = this.time.addEvent({
-    delay: 50,
-    repeat: tempoBonus - 1,
-    callback: () => {
-        this.adicionarPontos(25);
-        tempoBonus--;
-        this.tempoText.setText('Tempo: ' + tempoBonus);
-    }
-});
     
+    let tempoBonus = this.tempoRestante;
+    this.tempoRestante = 0;
 
-    // Caixa de fundo
-    const caixa = this.add.rectangle(x, y, 600, 200, 0x000000, 0.7)
+    const intervalo = this.time.addEvent({
+        delay: 50,
+        repeat: tempoBonus - 1,
+        callback: () => {
+            this.adicionarPontos(25);
+            tempoBonus--;
+            this.tempoText.setText('Tempo: ' + tempoBonus);
+        }
+    });
+
+    
+    this.add.rectangle(x, y, 600, 200, 0x000000, 0.7)
         .setOrigin(0.5)
-        .setDepth(1000); // Garantir que está acima de tudo
+        .setDepth(1000);
 
-    // Texto principal
-    const mensagem = this.add.text(x, y, 'Nível 1 com sucesso', {
+    
+    this.add.text(x, y, 'Nível 1 com sucesso', {
         fontSize: '64px',
         fill: '#ffffff',
         fontFamily: 'Arial',
@@ -426,16 +426,13 @@ const intervalo = this.time.addEvent({
         strokeThickness: 4
     })
     .setOrigin(0.5)
-    .setDepth(1001); // Texto acima da caixa
+    .setDepth(1001);
 
-    // Transição para o próximo nível após 3 segundos
+    
     this.time.delayedCall(tempoBonus * 50 + 1000, () => {
         this.registry.set('pontos', this.pontuacao);
         this.registry.set('vidas', this.vidas);
         this.scene.start('Nivel2');
     });
 }
-
-
-
 }

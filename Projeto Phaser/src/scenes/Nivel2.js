@@ -51,14 +51,14 @@ export class Nivel2 extends Phaser.Scene {
 
     create() {
         this.vidas = this.registry.get('vidas') || 3;
-        this.temPoder = false;//saber se o jogador tem power
+        this.temPoder = false;
         this.ataques = this.physics.add.group({allowGravity: false});
         this.ataquesIndependentes = [];
-        
+        this.nivelConcluido = false;
 
 
 
-        this.teclaAtaque = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z); // tecla Z
+        this.teclaAtaque = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z); 
 
         this.isDead = false;
         this.gameOverShown = false;
@@ -80,13 +80,11 @@ export class Nivel2 extends Phaser.Scene {
 
         this.chao = this.physics.add.staticGroup();
 
-        // Criar inimigos
+        
         this.inimigos = [];
 
         
-        // Adiciona mais se quiseres
-
-        // Colisão inimigos com chão
+        
         this.physics.add.collider(this.inimigos, this.chao);
 
         this.plataformasFlutuantes = this.physics.add.staticGroup();
@@ -162,7 +160,7 @@ export class Nivel2 extends Phaser.Scene {
 
 
 
-        this.player = this.physics.add.sprite(14000, 200, 'player_idle').setScale(0.8);
+        this.player = this.physics.add.sprite(10000, 200, 'player_idle').setScale(0.8);
         this.powerUpTroca = this.physics.add.staticImage(1750, 380, 'head').setScale(0.5).refreshBody();
 
         this.physics.add.overlap(this.player, this.powerUpTroca, () => {
@@ -193,13 +191,13 @@ export class Nivel2 extends Phaser.Scene {
             }
         }, null, this);
 
-        this.physics.add.collider(this.inimigos, this.chao); // inimigo com chão
+        this.physics.add.collider(this.inimigos, this.chao); 
        this.physics.add.overlap(this.ataques, this.inimigos, (ataque, inimigo) => {
             ataque.destroy();
 
             if(!inimigo.isDead && typeof inimigo.die === 'function') {
                 inimigo.die();
-                this.adicionarPontos(100); // opcional
+                this.adicionarPontos(100); 
             } 
         }, null, this);;
 
@@ -243,7 +241,7 @@ export class Nivel2 extends Phaser.Scene {
             repeat: -1
         });
 
-                // === CRIAR INIMIGOS ===
+               
                 this.inimigos = this.physics.add.group();
         
                 const posicoesInimigos = [
@@ -287,7 +285,7 @@ export class Nivel2 extends Phaser.Scene {
             });
         
         
-                // === COLISÕES DOS INIMIGOS ===
+              
                 this.physics.add.collider(this.inimigos, this.chao);
                 this.physics.add.collider(this.inimigos, this.plataformasFlutuantes);
         
@@ -331,6 +329,7 @@ export class Nivel2 extends Phaser.Scene {
             fontSize: '32px', fill: '#ffffff', fontFamily: 'Arial'
         }).setScrollFactor(0);
 
+        this.nivelConcluido = false;
         this.tempoRestante = 300;
         this.pontuacao = this.registry.get('pontos') || 0;
         this.tempoText = this.add.text(970, 40, 'Tempo: ' + this.tempoRestante, {
@@ -454,6 +453,13 @@ export class Nivel2 extends Phaser.Scene {
             this.atacar();
         }
 
+       if (this.player.x >= 14800 && !this.nivelConcluido) {
+     this.concluirNivel();
+   
+
+   
+    }
+
         if (this.inimigos) {
             this.inimigos.children.iterate(inimigo => {
                 if (inimigo && inimigo.update) {
@@ -472,11 +478,11 @@ export class Nivel2 extends Phaser.Scene {
             );
 
             if (colisao) {
-                // Matar inimigo
+               
                 inimigo.die();
                 this.adicionarPontos(250);
 
-                // Destruir slash
+             
                 this.ataquesIndependentes.splice(index, 1);
                 slash.destroy();
             }
@@ -489,7 +495,7 @@ export class Nivel2 extends Phaser.Scene {
 
     perderVida() {
         this.vidas--;
-        this.temPoder = false; // REMOVE O POWER UP AO MORRER
+        this.temPoder = false; 
         if (this.vidas >= 0) this.vidasText.setText('x ' + this.vidas);
         if (this.vidas > 0) {
 
@@ -521,8 +527,7 @@ export class Nivel2 extends Phaser.Scene {
         const y = this.checkpointAtivado ? this.checkpointY : 200;
         this.player.setPosition(x, y);
         this.player.clearTint();
-        this.temPoder = false; // <-- opcional aqui também
-
+        this.temPoder = false; 
     }
 
     adicionarPontos(valor) {
@@ -542,18 +547,66 @@ atacar() {
     );
 
     slash.setScale(0.2);
-    //slash.setSize(150, 150).setOffset(80, 80);
+    
     slash.setFlipX(direcao === -1);
     slash.direcao = direcao;
 
     slash.anims.play('ataque_anim');
     this.ataquesIndependentes.push(slash);
 
-    // Auto destruir após 1 segundo
+    
     this.time.delayedCall(1000, () => {
         const index = this.ataquesIndependentes.indexOf(slash);
         if (index !== -1) this.ataquesIndependentes.splice(index, 1);
         slash.destroy();
+    });
+}
+concluirNivel() {
+    if (this.isDead) return; 
+
+    this.nivelConcluido = true;
+    this.physics.pause();
+    this.player.setTint(0x00ff00);
+
+    const x = this.cameras.main.midPoint.x;
+    const y = this.cameras.main.midPoint.y;
+
+    
+    this.add.rectangle(x, y, 600, 200, 0x000000, 0.7)
+        .setOrigin(0.5)
+        .setDepth(1000);
+
+   
+    this.add.text(x, y, 'Nível 2 com sucesso', {
+        fontSize: '64px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        stroke: '#ffaa00',
+        strokeThickness: 4
+    }).setOrigin(0.5).setDepth(1001);
+
+    let tempoBonus = this.tempoRestante;
+
+    this.time.addEvent({
+        delay: 50,
+        repeat: tempoBonus - 1,
+        callback: () => {
+            this.adicionarPontos(25);
+            tempoBonus--;
+            this.tempoRestante = tempoBonus;
+            this.tempoText.setText('Tempo: ' + tempoBonus);
+            this.pontuacaoText.setText('Pontos: ' + this.pontuacao);
+        },
+        callbackScope: this,
+        onComplete: () => {
+           
+            this.time.delayedCall(1000, () => {
+                this.registry.set('pontos', this.pontuacao);
+                this.registry.set('vidas', this.vidas);
+                this.scene.stop('Nivel2');
+                this.scene.start('Nivel3');
+            });
+        }
     });
 }
 

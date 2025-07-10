@@ -13,10 +13,10 @@ export class Menu extends Phaser.Scene {
         const lang = localStorage.getItem('lang') || 'pt';
         const t = translations[lang];
 
-        // Adiciona imagem de fundo
+       
         this.add.image(640, 360, 'fundoMenu').setOrigin(0.5).setDisplaySize(1280, 720);
 
-        // Título com sombra
+       
         this.add.text(640, 100, t.title, {
             fontSize: '64px',
             color: '#ffffff',
@@ -32,7 +32,7 @@ export class Menu extends Phaser.Scene {
             }
         }).setOrigin(0.5);
 
-        // Estilo dos botões
+        
         const buttonStyle = {
             fontSize: '32px',
             color: '#ffffff',
